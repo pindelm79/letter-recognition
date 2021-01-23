@@ -99,13 +99,30 @@ class Conv2d(Layer):
                         ),
                     )
                     cross_correlation_sum += self.cross_correlate2d(
-                        padded_array, self.kernel[j, k]
+                        padded_array, self.weight[j, k]
                     )
                 output[i, j] = self.bias[j] + cross_correlation_sum
 
         return output
 
-    def backward(self):
+    def backward(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Does backpropagation through the conv2d layer.
+
+        Assumes stride = 1.
+
+        Args:
+            dout: "Upstream" gradients.
+            in_array: x - the last input to the layer.
+
+        Returns:
+            A tuple of dx, dw, db.
+        """
+        dx = np.empty_like(in_array)
+        dw = np.empty_like(self.kernel)
+        db = np.empty_like(self.bias)
+
         raise NotImplementedError
 
     def cross_correlate2d(
@@ -153,7 +170,7 @@ class Conv2d(Layer):
 
         TODO: initialize with sth else than ones
         """
-        self.kernel = np.ones(
+        self.weight = np.ones(
             (
                 self.out_channels,
                 self.in_channels,

@@ -43,10 +43,10 @@ class TestConv2d:
 
         output = conv2d_custom.forward(in_array)
 
-        kernel_tensor = torch.from_numpy(conv2d_custom.kernel).float()
+        weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
         bias_tensor = torch.from_numpy(conv2d_custom.bias).float()
         expected = F.conv2d(
-            in_tensor, kernel_tensor, stride=stride, padding=padding, bias=bias_tensor
+            in_tensor, weight_tensor, stride=stride, padding=padding, bias=bias_tensor
         )
 
         assert torch.allclose(torch.from_numpy(output).float(), expected)
@@ -77,9 +77,9 @@ class TestConv2d:
 
         out_shape = conv2d_custom.calculate_output_shape(in_shape)
 
-        kernel_tensor = torch.from_numpy(conv2d_custom.kernel).float()
+        weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
         expected_shape = F.conv2d(
-            in_tensor, kernel_tensor, stride=stride, padding=padding
+            in_tensor, weight_tensor, stride=stride, padding=padding
         ).size()
 
         assert out_shape == expected_shape
