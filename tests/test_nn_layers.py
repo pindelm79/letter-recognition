@@ -8,32 +8,47 @@ import torch.nn.functional as F
 from letter_recognition.nn import layers
 
 
-@pytest.fixture
-def conv2d_custom():
-    """Returns a custom Conv2d with in_channels=1, out_channels=1, kernel_size=3."""
-    return layers.Conv2d(1, 1, 3, bias=False)
-
-
-@pytest.mark.parametrize("input_dims", [(1, 1, 50, 100)])
-def test_conv2d_forward(conv2d_custom, input_dims: Tuple):
-    in_array = np.random.random_sample(input_dims)
+@pytest.mark.parametrize(
+    "N, in_channels, in_H, in_W, out_channels, kernel_size, bias",
+    [
+        (1, 1, 50, 100, 1, 3, False),
+        (20, 16, 50, 100, 33, 3, True),
+        (4, 3, 28, 28, 10, (3, 5), True),
+    ],
+)
+def test_conv2d_forward(N, in_channels, in_H, in_W, out_channels, kernel_size, bias):
+    conv2d_custom = layers.Conv2d(in_channels, out_channels, kernel_size, bias=bias)
+    in_shape = (N, in_channels, in_H, in_W)
+    in_array = np.random.random_sample(in_shape)
     in_tensor = torch.from_numpy(in_array).float()
 
     output = conv2d_custom.forward(in_array)
 
     kernel_tensor = torch.from_numpy(conv2d_custom.kernel).float()
-    expected = F.conv2d(in_tensor, kernel_tensor)
+    bias_tensor = torch.from_numpy(conv2d_custom.bias).float()
+    expected = F.conv2d(in_tensor, kernel_tensor, bias=bias_tensor)
 
     assert output.shape == expected.size()
     assert torch.allclose(torch.from_numpy(output).float(), expected)
 
 
-@pytest.mark.parametrize("input_dims", [(1, 1, 50, 100)])
-def test_conv2d_calculate_output_shape(conv2d_custom, input_dims: Tuple):
-    in_array = np.random.random_sample(input_dims)
+@pytest.mark.parametrize(
+    "N, in_channels, in_H, in_W, out_channels, kernel_size, bias",
+    [
+        (1, 1, 50, 100, 1, 3, False),
+        (20, 16, 50, 100, 33, 3, True),
+        (4, 3, 28, 28, 10, (3, 5), True),
+    ],
+)
+def test_conv2d_calculate_output_shape(
+    N, in_channels, in_H, in_W, out_channels, kernel_size, bias
+):
+    conv2d_custom = layers.Conv2d(in_channels, out_channels, kernel_size, bias=bias)
+    in_shape = (N, in_channels, in_H, in_W)
+    in_array = np.random.random_sample(in_shape)
     in_tensor = torch.from_numpy(in_array).float()
 
-    out_shape = conv2d_custom.calculate_output_shape(input_dims)
+    out_shape = conv2d_custom.calculate_output_shape(in_shape)
 
     kernel_tensor = torch.from_numpy(conv2d_custom.kernel).float()
     expected_shape = F.conv2d(in_tensor, kernel_tensor).size()
