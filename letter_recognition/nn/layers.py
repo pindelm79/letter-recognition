@@ -4,13 +4,14 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Union
 
 import numpy as np
+from scipy import signal
 
 
 class Layer(ABC):
-    """An abstract class for defining layers of a model."""
+    """An abstract class for defining layers/operations of a model."""
 
     @abstractmethod
-    def forward(self, input: np.ndarray):
+    def forward(self, in_array: np.ndarray):
         """An abstract method for defining a forward pass through the layer."""
         pass
 
@@ -64,13 +65,18 @@ class Conv2d(Layer):
         else:
             self.padding = padding
 
-        self.bias = bias
+        self.use_bias = bias
+        self.initialize_bias()
 
-    def forward(self, input: np.ndarray) -> np.ndarray:
+    def forward(self, in_array: np.ndarray) -> np.ndarray:
         """Applies the specified 2D convolution over an input.
 
+        Formula:
+            out(N_i, C_out_j) = bias(C_out_j) + Sum(from k=0 to C_in-1) of
+            cross-correlate(kernel(C_out_j, k), input(N_i, k))
+
         Args:
-            input: The input to be apply the convolution to. Shape: (N, C_in, H_in, W_in), where
+            in_array: The input to be apply the convolution to. Shape: (N, C_in, H_in, W_in), where
                 N = number of samples; C_in = number of channels in the input; H_in = height of
                 the input; W_in = width of the input.
 
@@ -80,25 +86,23 @@ class Conv2d(Layer):
                 calculated from the input and parameters; W_out = width of the output, calculated
                 from the input and parameters.
         """
-        raise NotImplementedError
+        # TODO: add padding
+
+        output = np.empty(self.calculate_output_shape(in_array.shape))
+        for i in range(output.shape[0]):
+            for j in range(output.shape[1]):
+                cross_correlation_sum = 0
+                for k in range(self.in_channels):
+                    cross_correlation_sum += signal.correlate2d(
+                        in_array[i, k], self.kernel[j, k], mode="valid"
+                    )
+                print(output[i, j].shape, self.bias[j], cross_correlation_sum.shape)
+                output[i, j] = self.bias[j] + cross_correlation_sum
+
+        return output
 
     def backward(self):
         raise NotImplementedError
-
-    def initialize_kernel(self):
-        """Initializes the kernel with weights of 1.
-            Shape: (out_channels, in_channels, kernel_size[0], kernel_size[1]).
-
-        TODO: initialize with sth else than ones
-        """
-        self.kernel = np.ones(
-            (
-                self.out_channels,
-                self.in_channels,
-                self.kernel_size[0],
-                self.kernel_size[1],
-            )
-        )
 
     def calculate_output_shape(
         self, input_shape: Tuple[int, int, int, int]
@@ -106,7 +110,7 @@ class Conv2d(Layer):
         """Helper function to calculate the shape of the output of the convolution.
 
         Args:
-            input_size: Shape of the input
+            input_size: Shape of the input.
 
         Returns:
             Shape of the convolution output.
@@ -120,3 +124,28 @@ class Conv2d(Layer):
             / self.stride[1]
         ) + 1
         return (input_shape[0], self.out_channels, int(out_height), int(out_width))
+
+    def initialize_kernel(self):
+        """Initializes the kernel with weights of 1.
+
+        Shape: (out_channels, in_channels, kernel_size[0], kernel_size[1]).
+
+        TODO: initialize with sth else than ones
+        """
+        self.kernel = np.ones(
+            (
+                self.out_channels,
+                self.in_channels,
+                self.kernel_size[0],
+                self.kernel_size[1],
+            )
+        )
+
+    def initialize_bias(self):
+        """Initializes the biases with zeros.
+
+        Shape: (out_channels)
+
+        TODO: initialize with sth else than zeros
+        """
+        self.bias = np.zeros(self.out_channels)
