@@ -86,23 +86,44 @@ class Conv2d(Layer):
                 calculated from the input and parameters; W_out = width of the output, calculated
                 from the input and parameters.
         """
-        # TODO: add padding
-
         output = np.empty(self.calculate_output_shape(in_array.shape))
         for i in range(output.shape[0]):
             for j in range(output.shape[1]):
                 cross_correlation_sum = 0
                 for k in range(self.in_channels):
-                    cross_correlation_sum += signal.correlate2d(
-                        in_array[i, k], self.kernel[j, k], mode="valid"
+                    padded_array = np.pad(
+                        in_array[i, k],
+                        (
+                            (self.padding[0], self.padding[0]),
+                            (self.padding[1], self.padding[1]),
+                        ),
                     )
-                print(output[i, j].shape, self.bias[j], cross_correlation_sum.shape)
+                    cross_correlation_sum += self.cross_correlate2d(
+                        padded_array, self.kernel[j, k]
+                    )
                 output[i, j] = self.bias[j] + cross_correlation_sum
 
         return output
 
     def backward(self):
         raise NotImplementedError
+
+    def cross_correlate2d(
+        self, in1: np.ndarray, in2: np.ndarray, stride: Tuple[int, int] = (1, 1)
+    ) -> np.ndarray:
+        """Performs a cross-correlation on the given 2 arrays, with given stride.
+
+        TODO: implement my own.
+
+        Args:
+            in1: 1st 2D array.
+            in2: 2nd 2D array.
+            stride: "Step size" of the convolution in each dimension.
+
+        Returns:
+            np.ndarray: [description]
+        """
+        return signal.correlate2d(in1, in2, mode="valid")
 
     def calculate_output_shape(
         self, input_shape: Tuple[int, int, int, int]
