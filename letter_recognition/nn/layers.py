@@ -113,17 +113,48 @@ class Conv2d(Layer):
         Assumes stride = 1.
 
         Args:
-            dout: "Upstream" gradients.
+            dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
             in_array: x - the last input to the layer.
 
         Returns:
-            A tuple of dx, dw, db.
+            A tuple of:
+                dx (shape: N, C_in, H, W),
+                dw (shape: C_out, C_in, kernel_H, kernel_W) (averaged over N),
+                db (shape: C_out) (averaged over N).
         """
         dx = np.empty_like(in_array)
-        dw = np.empty_like(self.kernel)
-        db = np.empty_like(self.bias)
+        dw = np.empty(
+            (
+                in_array.shape[0],
+                self.out_channels,
+                self.in_channels,
+                self.kernel_size[0],
+                self.kernel_size[1],
+            )
+        )
+        db = self.calculate_bias_gradient(dout, in_array)
 
-        raise NotImplementedError
+        return dx, dw, db
+
+    def calculate_bias_gradient(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> np.ndarray:
+        """Calculates the gradient (w.r.t. the output) of the biases.
+
+        Args:
+            dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
+            in_array: x - the last input to the convolution layer.
+
+        Returns:
+            Array of gradients, averaged over N (shape: C_out).
+        """
+        db = np.empty((in_array.shape[0], self.out_channels))
+
+        for i in range(dout.shape[0]):
+            for j in range(dout.shape[1]):
+                db[i, j] = np.sum(dout[i, j])
+
+        return np.mean(db, axis=0)
 
     def cross_correlate2d(
         self, in1: np.ndarray, in2: np.ndarray, stride: Tuple[int, int] = (1, 1)
@@ -180,10 +211,13 @@ class Conv2d(Layer):
         )
 
     def initialize_bias(self):
-        """Initializes the biases with zeros.
+        """Initializes the biases.
 
         Shape: (out_channels)
 
         TODO: initialize with sth else than zeros
         """
-        self.bias = np.zeros(self.out_channels)
+        if self.use_bias:
+            self.bias = np.ones(self.out_channels)
+        else:
+            self.bias = np.zeros(self.out_channels)
