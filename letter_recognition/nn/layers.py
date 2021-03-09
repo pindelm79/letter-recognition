@@ -119,8 +119,8 @@ class Conv2d(Layer):
         Returns:
             A tuple of:
                 dx (shape: N, C_in, H, W),
-                dw (shape: C_out, C_in, kernel_H, kernel_W) (averaged over N),
-                db (shape: C_out) (averaged over N).
+                dw (shape: C_out, C_in, kernel_H, kernel_W)
+                db (shape: C_out).
         """
         dx = np.empty_like(in_array)
         dw = np.empty(
@@ -151,15 +151,13 @@ class Conv2d(Layer):
             in_array: x - the last input to the convolution layer.
 
         Returns:
-            Array of gradients, averaged over N (shape: C_out).
+            Array of gradients (shape: C_out).
         """
         db = np.empty((in_array.shape[0], self.out_channels))
 
-        for i in range(dout.shape[0]):
-            for j in range(dout.shape[1]):
-                db[i, j] = np.sum(dout[i, j])
+        db = np.sum(dout, axis=(0, 2, 3))
 
-        return np.mean(db, axis=0)
+        return db
 
     def cross_correlate2d(
         self, in1: np.ndarray, in2: np.ndarray, stride: Tuple[int, int] = (1, 1)
