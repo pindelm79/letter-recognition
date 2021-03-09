@@ -27,13 +27,13 @@ class TestConv2d:
         padding,
         bias,
     ):
-        conv2d_custom = layers.Conv2d(
-            in_channels, out_channels, kernel_size, padding=padding, bias=bias
-        )
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.random_sample(in_shape)
         in_tensor = torch.from_numpy(in_array).float()
 
+        conv2d_custom = layers.Conv2d(
+            in_channels, out_channels, kernel_size, padding=padding, bias=bias
+        )
         output = conv2d_custom.forward(in_array)
 
         weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
@@ -46,13 +46,13 @@ class TestConv2d:
     def test_calculate_output_shape(
         self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
     ):
-        conv2d_custom = layers.Conv2d(
-            in_channels, out_channels, kernel_size, padding=padding
-        )
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.random_sample(in_shape)
         in_tensor = torch.from_numpy(in_array).float()
 
+        conv2d_custom = layers.Conv2d(
+            in_channels, out_channels, kernel_size, padding=padding
+        )
         out_shape = conv2d_custom.calculate_output_shape(in_shape)
 
         weight_tensor = torch.from_numpy(conv2d_custom.weight).float()

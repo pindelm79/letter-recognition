@@ -132,7 +132,12 @@ class Conv2d(Layer):
                 self.kernel_size[1],
             )
         )
-        db = self.calculate_bias_gradient(dout, in_array)
+
+        # Only calculate db if using bias, otherwise just zeros.
+        if self.use_bias:
+            db = self.calculate_bias_gradient(dout, in_array)
+        else:
+            db = np.zeros(self.out_channels)
 
         return dx, dw, db
 
@@ -215,7 +220,7 @@ class Conv2d(Layer):
 
         Shape: (out_channels)
 
-        TODO: initialize with sth else than zeros
+        TODO: initialize with sth else than zeros/ones
         """
         if self.use_bias:
             self.bias = np.ones(self.out_channels)
