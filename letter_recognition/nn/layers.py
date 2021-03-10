@@ -1,9 +1,10 @@
 """This module contains layers which can be added into a model."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
+from numpy.lib.function_base import _calculate_shapes
 from scipy import signal
 
 
@@ -114,24 +115,15 @@ class Conv2d(Layer):
 
         Args:
             dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
-            in_array: x - the last input to the layer.
+            in_array: Last input to the layer. Shape: (N, C_in, H_in, W_in).
 
         Returns:
             A tuple of:
-                dx (shape: N, C_in, H, W),
-                dw (shape: C_out, C_in, kernel_H, kernel_W)
-                db (shape: C_out).
+                dx - Shape: (N, C_in, H, W),
+                dW - Shape: (C_out, C_in, kernel_H, kernel_W)
+                db - Shape: (C_out).
         """
         dx = np.empty_like(in_array)
-        dw = np.empty(
-            (
-                in_array.shape[0],
-                self.out_channels,
-                self.in_channels,
-                self.kernel_size[0],
-                self.kernel_size[1],
-            )
-        )
 
         # Only calculate db if using bias, otherwise just zeros.
         if self.use_bias:
@@ -139,32 +131,59 @@ class Conv2d(Layer):
         else:
             db = np.zeros(self.out_channels)
 
-        return dx, dw, db
+        dW = self.calculate_weight_gradient(dout, in_array)
 
-    def calculate_bias_gradient(
-        self, dout: np.ndarray, in_array: np.ndarray
-    ) -> np.ndarray:
+        return dx, dW, db
+
+    def calculate_bias_gradient(self, dout: np.ndarray) -> np.ndarray:
         """Calculates the gradient (w.r.t. the output) of the biases.
 
         Args:
             dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
-            in_array: x - the last input to the convolution layer.
 
         Returns:
-            Array of gradients (shape: C_out).
+            Array of bias gradients. Shape: (C_out).
         """
-        db = np.empty((in_array.shape[0], self.out_channels))
-
         db = np.sum(dout, axis=(0, 2, 3))
 
         return db
+
+    def calculate_weight_gradient(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> np.ndarray:
+        """Calculates the gradient (w.r.t. the output) of the weights (kernel).
+
+        Args:
+            dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
+            in_array: Last input to the layer. Shape: (N, C_in, H_in, W_in).
+
+        Returns:
+            Array of weight gradients. Shape: (C_out, C_in, kernel_H, kernel_W).
+        """
+        # TODO: add padding
+
+        dW = np.zeros(
+            (dout.shape[1], self.in_channels, self.kernel_size[0], self.kernel_size[1])
+        )
+
+        for n in range(dout.shape[0]):  # N
+            for f in range(dout.shape[1]):  # output channels
+                for c in range(self.in_channels):  # input channels
+                    for k in range(self.kernel_size[0]):  # kernel width
+                        for l in range(self.kernel_size[1]):  # kernel height
+                            for i in range(dout.shape[2]):  # image width
+                                for j in range(dout.shape[3]):  # image height
+                                    # ^Using dout's shape because it is already constrained
+                                    dW[f, c, k, l] += (
+                                        in_array[n, c, i + k, j + l] * dout[n, f, i, j]
+                                    )
+
+        return dW
 
     def cross_correlate2d(
         self, in1: np.ndarray, in2: np.ndarray, stride: Tuple[int, int] = (1, 1)
     ) -> np.ndarray:
         """Performs a cross-correlation on the given 2 arrays, with given stride.
-
-        TODO: implement my own.
 
         Args:
             in1: 1st 2D array.
@@ -172,7 +191,7 @@ class Conv2d(Layer):
             stride: "Step size" of the convolution in each dimension.
 
         Returns:
-            np.ndarray: [description]
+            The result of the cross-correlation.
         """
         return signal.correlate2d(in1, in2, mode="valid")
 
