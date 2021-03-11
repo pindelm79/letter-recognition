@@ -84,7 +84,7 @@ class TestConv2d:
         bias_gradient_torch = bias_tensor.grad
 
         bias_gradient_custom = conv2d_custom.calculate_bias_gradient(
-            out_torch.grad.numpy(), in_array
+            out_torch.grad.numpy()
         )
 
         assert bias_gradient_custom.shape == bias_gradient_torch.size()
@@ -92,20 +92,23 @@ class TestConv2d:
             torch.from_numpy(bias_gradient_custom).float(), bias_gradient_torch
         )
 
+    @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_weight_gradient(
-        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size
+        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape)
         in_tensor = torch.from_numpy(in_array).float()
 
-        conv2d_custom = layers.Conv2d(in_channels, out_channels, kernel_size)
+        conv2d_custom = layers.Conv2d(
+            in_channels, out_channels, kernel_size, padding=padding
+        )
         # out_custom = conv2d_custom.forward(in_array)
 
         weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
         weight_tensor.requires_grad_(True)
         # bias_tensor = torch.from_numpy(conv2d_custom.bias).float()
-        out_torch = F.conv2d(in_tensor, weight_tensor)
+        out_torch = F.conv2d(in_tensor, weight_tensor, padding=padding)
         out_torch.retain_grad()
 
         final = out_torch * 2

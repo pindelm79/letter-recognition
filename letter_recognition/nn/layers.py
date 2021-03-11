@@ -88,21 +88,18 @@ class Conv2d(Layer):
                 from the input and parameters.
         """
         output = np.empty(self.calculate_output_shape(in_array.shape))
-        for i in range(output.shape[0]):
-            for j in range(output.shape[1]):
+
+        if self.padding != (0, 0):
+            in_array = self.pad_input(in_array, self.padding)
+
+        for n in range(output.shape[0]):  # N
+            for f in range(output.shape[1]):  # output channels
                 cross_correlation_sum = 0
-                for k in range(self.in_channels):
-                    padded_array = np.pad(
-                        in_array[i, k],
-                        (
-                            (self.padding[0], self.padding[0]),
-                            (self.padding[1], self.padding[1]),
-                        ),
-                    )
+                for c in range(self.in_channels):  # input channels
                     cross_correlation_sum += self.cross_correlate2d(
-                        padded_array, self.weight[j, k]
+                        in_array[n, c], self.weight[f, c]
                     )
-                output[i, j] = self.bias[j] + cross_correlation_sum
+                output[n, f] = self.bias[f] + cross_correlation_sum
 
         return output
 
@@ -135,6 +132,8 @@ class Conv2d(Layer):
 
         return dx, dW, db
 
+    # ---Private helper functions.---
+
     def calculate_bias_gradient(self, dout: np.ndarray) -> np.ndarray:
         """Calculates the gradient (w.r.t. the output) of the biases.
 
@@ -160,11 +159,12 @@ class Conv2d(Layer):
         Returns:
             Array of weight gradients. Shape: (C_out, C_in, kernel_H, kernel_W).
         """
-        # TODO: add padding
-
         dW = np.zeros(
             (dout.shape[1], self.in_channels, self.kernel_size[0], self.kernel_size[1])
         )
+
+        if self.padding != (0, 0):
+            in_array = self.pad_input(in_array, self.padding)
 
         for n in range(dout.shape[0]):  # N
             for f in range(dout.shape[1]):  # output channels
@@ -215,6 +215,35 @@ class Conv2d(Layer):
             / self.stride[1]
         ) + 1
         return (input_shape[0], self.out_channels, int(out_height), int(out_width))
+
+    def pad_input(self, in_array: np.ndarray, padding: Tuple[int, int]) -> np.ndarray:
+        """Applies padding to the 4D input array.
+
+        Args:
+            in_array: Input array. Shape: (N, C_in, H_in, W_in)
+            padding: Padding to apply to each dim.
+
+        Returns:
+            Padded input array.
+        """
+        padded_array = np.zeros(
+            (
+                in_array.shape[0],
+                in_array.shape[1],
+                in_array.shape[2] + 2 * padding[0],
+                in_array.shape[3] + 2 * padding[1],
+            )
+        )
+        for n in range(in_array.shape[0]):  # N
+            for c in range(in_array.shape[1]):  # input channels
+                padded_array[n, c] = np.pad(
+                    in_array[n, c],
+                    (
+                        (self.padding[0], self.padding[0]),
+                        (self.padding[1], self.padding[1]),
+                    ),
+                )
+        return padded_array
 
     def initialize_kernel(self):
         """Initializes the kernel with weights of 1.
