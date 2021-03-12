@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
+import math
 
 import numpy as np
 from scipy import signal
@@ -55,10 +56,9 @@ class Conv2d(Layer):
             self.kernel_size = kernel_size
         self.initialize_kernel()
 
-        if isinstance(stride, int):
-            self.stride = (stride, stride)
-        else:
-            self.stride = stride
+        if stride != 1 and stride != (1, 1):
+            raise Warning("Strides different than 1 are currently not supported.")
+        self.stride = (1, 1)
 
         if isinstance(padding, int):
             self.padding = (padding, padding)
@@ -189,12 +189,10 @@ class Conv2d(Layer):
         Returns:
             Array of input gradients. Shape: (N, C_in, H_in, W_in).
         """
-        # Assumes: no padding
-
         if self.padding != (0, 0):
             in_array = self.pad(in_array, self.padding)
 
-        dx = np.zeros_like(in_array)
+        dx = np.zeros(in_array.shape)
 
         for n in range(dout.shape[0]):  # N
             for f in range(dout.shape[1]):  # output channels
@@ -281,13 +279,15 @@ class Conv2d(Layer):
     def initialize_kernel(self):
         """Initializes the kernel with weights of 1.
 
-        Shape: (out_channels, in_channels, kernel_size[0], kernel_size[1]).
+        Initialization values as in PyTorch.
 
-        TODO: initialize with sth else than ones
+        Shape: (out_channels, in_channels, kernel_size[0], kernel_size[1]).
         """
-        self.weight = np.random.randint(
-            0,
-            3,
+        k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
+
+        self.weight = np.random.uniform(
+            -math.sqrt(k),
+            math.sqrt(k),
             (
                 self.out_channels,
                 self.in_channels,
@@ -299,11 +299,15 @@ class Conv2d(Layer):
     def initialize_bias(self):
         """Initializes the biases.
 
+        Initialization values as in PyTorch.
+
         Shape: (out_channels)
 
-        TODO: initialize with sth else than zeros/ones
         """
         if self.use_bias:
-            self.bias = np.ones(self.out_channels)
+            k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
+            self.bias = np.random.uniform(
+                -math.sqrt(k), math.sqrt(k), self.out_channels
+            )
         else:
             self.bias = np.zeros(self.out_channels)
