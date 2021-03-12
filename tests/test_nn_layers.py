@@ -28,7 +28,7 @@ class TestConv2d:
         bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = layers.Conv2d(
@@ -43,14 +43,16 @@ class TestConv2d:
         )
 
         assert out_custom.shape == out_torch.size()
-        assert torch.allclose(torch.from_numpy(out_custom).float(), out_torch)
+        assert torch.allclose(
+            torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
+        )
 
     @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_output_shape(
         self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = layers.Conv2d(
@@ -67,7 +69,7 @@ class TestConv2d:
         self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = layers.Conv2d(in_channels, out_channels, kernel_size)
@@ -88,7 +90,9 @@ class TestConv2d:
 
         assert bias_gradient_custom.shape == bias_gradient_torch.size()
         assert torch.allclose(
-            torch.from_numpy(bias_gradient_custom).float(), bias_gradient_torch
+            torch.from_numpy(bias_gradient_custom).float(),
+            bias_gradient_torch,
+            atol=1e-4,
         )
 
     @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
@@ -96,7 +100,7 @@ class TestConv2d:
         self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = layers.Conv2d(
@@ -120,22 +124,15 @@ class TestConv2d:
         assert torch.allclose(
             torch.from_numpy(weight_gradient_custom).float(),
             weight_gradient_torch,
+            atol=1e-4,
         )
 
     @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_input_gradient(
         self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
     ):
-        # batch_size = 1
-        # in_channels = 1
-        # in_H = 3
-        # in_W = 3
-        # out_channels = 1
-        # kernel_size = (2, 2)
-        # in_array = np.arange(1, 10).reshape((1, 1, 3, 3))
-
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
 
@@ -159,4 +156,5 @@ class TestConv2d:
         assert torch.allclose(
             torch.from_numpy(input_gradient_custom).float(),
             input_gradient_torch,
+            atol=1e-4,
         )
