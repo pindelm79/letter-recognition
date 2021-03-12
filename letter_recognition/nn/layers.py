@@ -1,10 +1,9 @@
 """This module contains layers which can be added into a model."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
-from numpy.lib.function_base import _calculate_shapes
 from scipy import signal
 
 
@@ -90,7 +89,7 @@ class Conv2d(Layer):
         output = np.empty(self.calculate_output_shape(in_array.shape))
 
         if self.padding != (0, 0):
-            in_array = self.pad_input(in_array, self.padding)
+            in_array = self.pad(in_array, self.padding)
 
         for n in range(output.shape[0]):  # N
             for f in range(output.shape[1]):  # output channels
@@ -122,13 +121,13 @@ class Conv2d(Layer):
         """
         dx = np.empty_like(in_array)
 
+        dW = self.calculate_weight_gradient(dout, in_array)
+
         # Only calculate db if using bias, otherwise just zeros.
         if self.use_bias:
             db = self.calculate_bias_gradient(dout, in_array)
         else:
             db = np.zeros(self.out_channels)
-
-        dW = self.calculate_weight_gradient(dout, in_array)
 
         return dx, dW, db
 
@@ -159,26 +158,60 @@ class Conv2d(Layer):
         Returns:
             Array of weight gradients. Shape: (C_out, C_in, kernel_H, kernel_W).
         """
-        dW = np.zeros(
-            (dout.shape[1], self.in_channels, self.kernel_size[0], self.kernel_size[1])
-        )
+        dW = np.zeros(self.weight.shape)
 
         if self.padding != (0, 0):
-            in_array = self.pad_input(in_array, self.padding)
+            in_array = self.pad(in_array, self.padding)
 
         for n in range(dout.shape[0]):  # N
             for f in range(dout.shape[1]):  # output channels
                 for c in range(self.in_channels):  # input channels
-                    for k in range(self.kernel_size[0]):  # kernel width
-                        for l in range(self.kernel_size[1]):  # kernel height
-                            for i in range(dout.shape[2]):  # image width
-                                for j in range(dout.shape[3]):  # image height
-                                    # ^Using dout's shape because it is already constrained
+                    for i in range(dout.shape[2]):  # image width
+                        for j in range(dout.shape[3]):  # image height
+                            # ^Using dout's shape because it is already constrained
+                            for k in range(self.kernel_size[0]):  # kernel width
+                                for l in range(self.kernel_size[1]):  # kernel height
                                     dW[f, c, k, l] += (
                                         in_array[n, c, i + k, j + l] * dout[n, f, i, j]
                                     )
 
         return dW
+
+    def calculate_input_gradient(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> np.ndarray:
+        """Calculates the gradient (w.r.t. the output) of the input.
+
+        Args:
+            dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
+            in_array: Last input to the layer. Shape: (N, C_in, H_in, W_in).
+
+        Returns:
+            Array of input gradients. Shape: (N, C_in, H_in, W_in).
+        """
+        # Assumes: no padding
+
+        if self.padding != (0, 0):
+            in_array = self.pad(in_array, self.padding)
+
+        dx = np.zeros_like(in_array)
+
+        for n in range(dout.shape[0]):  # N
+            for f in range(dout.shape[1]):  # output channels
+                for c in range(self.in_channels):  # input channels
+                    for i in range(dout.shape[2]):  # image width
+                        for j in range(dout.shape[3]):  # image height
+                            # ^Using dout's shape because it is already constrained
+                            for k in range(self.kernel_size[0]):  # kernel width
+                                for l in range(self.kernel_size[1]):  # kernel height
+                                    dx[n, c, i + k, j + l] += (
+                                        self.weight[f, c, k, l] * dout[n, f, i, j]
+                                    )
+
+        # Return dx with no padding
+        new_H = dx.shape[2] - self.padding[0]
+        new_W = dx.shape[3] - self.padding[1]
+        return dx[:, :, self.padding[0] : new_H, self.padding[1] : new_W]
 
     def cross_correlate2d(
         self, in1: np.ndarray, in2: np.ndarray, stride: Tuple[int, int] = (1, 1)
@@ -216,7 +249,7 @@ class Conv2d(Layer):
         ) + 1
         return (input_shape[0], self.out_channels, int(out_height), int(out_width))
 
-    def pad_input(self, in_array: np.ndarray, padding: Tuple[int, int]) -> np.ndarray:
+    def pad(self, in_array: np.ndarray, padding: Tuple[int, int]) -> np.ndarray:
         """Applies padding to the 4D input array.
 
         Args:
@@ -252,13 +285,15 @@ class Conv2d(Layer):
 
         TODO: initialize with sth else than ones
         """
-        self.weight = np.ones(
+        self.weight = np.random.randint(
+            0,
+            3,
             (
                 self.out_channels,
                 self.in_channels,
                 self.kernel_size[0],
                 self.kernel_size[1],
-            )
+            ),
         )
 
     def initialize_bias(self):
