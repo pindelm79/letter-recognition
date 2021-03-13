@@ -13,9 +13,30 @@ from letter_recognition.nn import layers
     "batch_size, in_channels, out_channels, in_H, in_W, kernel_size",
     [(1, 1, 1, 3, 3, 2), (4, 1, 9, 28, 28, 3), (10, 3, 10, 29, 13, (1, 4))],
 )
+@pytest.mark.parametrize("padding", [0, 2, (2, 1)])
+@pytest.mark.parametrize("bias", [False, True])
 class TestConv2d:
-    @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
-    @pytest.mark.parametrize("bias", [False, True])
+    def test_integration(
+        self,
+        batch_size,
+        in_channels,
+        in_H,
+        in_W,
+        out_channels,
+        kernel_size,
+        padding,
+        bias,
+    ):
+        # For now, just checking if there are no errors.
+        in_shape = (batch_size, in_channels, in_H, in_W)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        conv2d = layers.Conv2d(
+            in_channels, out_channels, kernel_size, padding=padding, bias=bias
+        )
+        out = conv2d.forward(in_array)
+        gradient = np.full_like(out, 2)
+        dx, dW, db = conv2d.backward(gradient, in_array)
+
     def test_forward(
         self,
         batch_size,
@@ -47,9 +68,16 @@ class TestConv2d:
             torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
         )
 
-    @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_output_shape(
-        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
+        self,
+        batch_size,
+        in_channels,
+        in_H,
+        in_W,
+        out_channels,
+        kernel_size,
+        padding,
+        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")
@@ -66,7 +94,15 @@ class TestConv2d:
         assert out_shape_custom == out_shape_torch
 
     def test_calculate_bias_gradient(
-        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size
+        self,
+        batch_size,
+        in_channels,
+        in_H,
+        in_W,
+        out_channels,
+        kernel_size,
+        padding,
+        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")
@@ -95,9 +131,16 @@ class TestConv2d:
             atol=1e-4,
         )
 
-    @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_weight_gradient(
-        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
+        self,
+        batch_size,
+        in_channels,
+        in_H,
+        in_W,
+        out_channels,
+        kernel_size,
+        padding,
+        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")
@@ -127,9 +170,16 @@ class TestConv2d:
             atol=1e-4,
         )
 
-    @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
     def test_calculate_input_gradient(
-        self, batch_size, in_channels, in_H, in_W, out_channels, kernel_size, padding
+        self,
+        batch_size,
+        in_channels,
+        in_H,
+        in_W,
+        out_channels,
+        kernel_size,
+        padding,
+        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")

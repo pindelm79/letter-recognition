@@ -119,13 +119,13 @@ class Conv2d(Layer):
                 dW - Shape: (C_out, C_in, kernel_H, kernel_W)
                 db - Shape: (C_out).
         """
-        dx = np.empty_like(in_array)
+        dx = self.calculate_input_gradient(dout, in_array)
 
         dW = self.calculate_weight_gradient(dout, in_array)
 
         # Only calculate db if using bias, otherwise just zeros.
         if self.use_bias:
-            db = self.calculate_bias_gradient(dout, in_array)
+            db = self.calculate_bias_gradient(dout)
         else:
             db = np.zeros(self.out_channels)
 
