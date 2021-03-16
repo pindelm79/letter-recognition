@@ -208,3 +208,26 @@ class TestConv2d:
             input_gradient_torch,
             atol=1e-4,
         )
+
+
+@pytest.mark.parametrize(
+    "batch_size, in_features, out_features", [(1, 3, 2), (4, 400, 100), (50, 20, 500)]
+)
+@pytest.mark.parametrize("bias", [False, True])
+class TestLinear:
+    def test_forward(self, batch_size, in_features, out_features, bias):
+        in_shape = (batch_size, in_features)
+        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+
+        linear_custom = nn_custom.Linear(in_features, out_features, bias)
+        out_custom = linear_custom.forward(in_array)
+
+        weight_tensor = torch.from_numpy(linear_custom.weight).float()
+        bias_tensor = torch.from_numpy(linear_custom.bias).float()
+        out_torch = F.linear(in_tensor, weight_tensor, bias_tensor)
+
+        assert out_custom.shape == out_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
+        )

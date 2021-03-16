@@ -8,7 +8,7 @@ import numpy as np
 from scipy import signal
 
 
-class Layer(ABC):
+class _Layer(ABC):
     """An abstract class for defining layers/operations of a model."""
 
     @abstractmethod
@@ -22,7 +22,7 @@ class Layer(ABC):
         pass
 
 
-class Conv2d(Layer):
+class Conv2d(_Layer):
     """Defines a 2D convolution layer."""
 
     def __init__(
@@ -313,7 +313,7 @@ class Conv2d(Layer):
             self.bias = np.zeros(self.out_channels)
 
 
-class Linear(Layer):
+class Linear(_Layer):
     """Defines a fully connected (linear) layer.
 
     Parameters
@@ -362,8 +362,12 @@ class Linear(Layer):
         -------
         np.ndarray
             Output of the transformation. Shape: (N, out_features), where N = no. of samples.
+
+        Notes
+        -----
+        .. math:: y = x W^T + b
         """
-        pass
+        return in_array @ self.weight.transpose() + self.bias
 
     def backward(
         self, dout: np.ndarray, in_array: np.ndarray
