@@ -314,41 +314,74 @@ class Conv2d(Layer):
 
 
 class Linear(Layer):
-    """Defines a fully connected (linear) layer."""
+    """Defines a fully connected (linear) layer.
+
+    Parameters
+    ----------
+    in_features : int
+        Size of each input sample.
+    out_features : int
+        Size of each output sample.
+    bias : bool, optional
+        If True, adds a learnable bias to the output.
+
+    Attributes
+    ----------
+    in_features
+    out_features
+    weight : np.ndarray
+        Learnable weights of shape (out_features, in_features)
+    bias : np.ndarray
+        Learnable bias of shape (out_features)
+    """
 
     def __init__(self, in_features: int, out_features: int, bias: bool = True):
-        """
-        Args:
-            in_features: Size of each input sample.
-            out_features: Size of each output sample.
-            bias (bool, optional): If True, adds a learnable bias to the output.
-        """
-        pass
+        self.in_features = in_features
+        self.out_features = out_features
+        self._use_bias = bias
 
-    def forward(self, in_array: np.ndarray):
+        # Weight and bias initialization (as in PyTorch)
+        k = 1 / in_features
+        self.weight = np.random.uniform(
+            -math.sqrt(k), math.sqrt(k), (out_features, in_features)
+        )
+        if self._use_bias:
+            self.bias = np.random.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
+        else:
+            self.bias = np.zeros((out_features,))
+
+    def forward(self, in_array: np.ndarray) -> np.ndarray:
         """Applies the specified linear transformation over an input.
 
-        Args:
-            in_array: Input to apply the transformation to. Shape: (N, H_in), where
-                N = number of samples, H_in = in_features.
+        Parameters
+        ----------
+        in_array : np.ndarray
+            Input to apply the transformation to. Shape: (N, in_features), where N = no. of samples.
 
-        Returns:
-            The output of the transformation. Shape: (N, H_out), where N = number of samples,
-            H_in = out_features.
+        Returns
+        -------
+        np.ndarray
+            Output of the transformation. Shape: (N, out_features), where N = no. of samples.
         """
         pass
 
-    def backward(self, dout: np.ndarray, in_array: np.ndarray):
+    def backward(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Does backpropagation through the Linear layer.
 
-        Args:
-            dout: "Upstream" gradients. Shape: (N, H_out).
-            in_array: Last input to the layer. Shape: (N, H_in).
+        Parameters
+        ----------
+        dout : np.ndarray
+            "Upstream" gradients. Shape: (N, out_features).
+        in_array : np.ndarray
+            Last input to the layer. Shape: (N, in_features).
 
-        Returns:
-            A tuple of:
-                dx - Shape: (N, H_in),
-                dW - Shape: (H_out, H_in)
-                db - Shape: (H_out).
+        Returns
+        -------
+        tuple of 3 numpy arrays
+            dx - Shape: (N, in_features),
+            dW - Shape: (out_features, in_features)
+            db - Shape: (out_features).
         """
         return super().backward()
