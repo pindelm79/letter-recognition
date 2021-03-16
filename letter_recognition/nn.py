@@ -311,3 +311,44 @@ class Conv2d(Layer):
             )
         else:
             self.bias = np.zeros(self.out_channels)
+
+
+class Linear(Layer):
+    """Defines a fully connected (linear) layer."""
+
+    def __init__(self, in_features: int, out_features: int, bias: bool = True):
+        """
+        Args:
+            in_features: Size of each input sample.
+            out_features: Size of each output sample.
+            bias (bool, optional): If True, adds a learnable bias to the output.
+        """
+        pass
+
+    def forward(self, in_array: np.ndarray):
+        """Applies the specified linear transformation over an input.
+
+        Args:
+            in_array: Input to apply the transformation to. Shape: (N, H_in), where
+                N = number of samples, H_in = in_features.
+
+        Returns:
+            The output of the transformation. Shape: (N, H_out), where N = number of samples,
+            H_in = out_features.
+        """
+        pass
+
+    def backward(self, dout: np.ndarray, in_array: np.ndarray):
+        """Does backpropagation through the Linear layer.
+
+        Args:
+            dout: "Upstream" gradients. Shape: (N, H_out).
+            in_array: Last input to the layer. Shape: (N, H_in).
+
+        Returns:
+            A tuple of:
+                dx - Shape: (N, H_in),
+                dW - Shape: (H_out, H_in)
+                db - Shape: (H_out).
+        """
+        return super().backward()
