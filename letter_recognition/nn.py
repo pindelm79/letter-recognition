@@ -8,7 +8,7 @@ import numpy as np
 from scipy import signal
 
 
-class Layer(ABC):
+class _Layer(ABC):
     """An abstract class for defining layers/operations of a model."""
 
     @abstractmethod
@@ -22,7 +22,7 @@ class Layer(ABC):
         pass
 
 
-class Conv2d(Layer):
+class Conv2d(_Layer):
     """Defines a 2D convolution layer."""
 
     def __init__(
@@ -311,3 +311,87 @@ class Conv2d(Layer):
             )
         else:
             self.bias = np.zeros(self.out_channels)
+
+
+class Linear(_Layer):
+    """Defines a fully connected (linear) layer.
+
+    Parameters
+    ----------
+    in_features : int
+        Size of each input sample.
+    out_features : int
+        Size of each output sample.
+    bias : bool, optional
+        If True, adds a learnable bias to the output.
+
+    Attributes
+    ----------
+    in_features
+    out_features
+    weight : np.ndarray
+        Learnable weights of shape (out_features, in_features)
+    bias : np.ndarray
+        Learnable bias of shape (out_features)
+    """
+
+    def __init__(self, in_features: int, out_features: int, bias: bool = True):
+        self.in_features = in_features
+        self.out_features = out_features
+        self._use_bias = bias
+
+        # Weight and bias initialization (as in PyTorch)
+        k = 1 / in_features
+        self.weight = np.random.uniform(
+            -math.sqrt(k), math.sqrt(k), (out_features, in_features)
+        )
+        if self._use_bias:
+            self.bias = np.random.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
+        else:
+            self.bias = np.zeros((out_features,))
+
+    def forward(self, in_array: np.ndarray) -> np.ndarray:
+        """Applies the specified linear transformation over an input.
+
+        Parameters
+        ----------
+        in_array : np.ndarray
+            Input to apply the transformation to. Shape: (N, in_features), where N = no. of samples.
+
+        Returns
+        -------
+        np.ndarray
+            Output of the transformation. Shape: (N, out_features), where N = no. of samples.
+
+        Notes
+        -----
+        .. math:: y = x W^T + b
+        """
+        return in_array @ self.weight.transpose() + self.bias
+
+    def backward(
+        self, dout: np.ndarray, in_array: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Does backpropagation through the Linear layer.
+
+        Parameters
+        ----------
+        dout : np.ndarray
+            "Upstream" gradients. Shape: (N, out_features).
+        in_array : np.ndarray
+            Last input to the layer. Shape: (N, in_features).
+
+        Returns
+        -------
+        tuple of 3 numpy arrays
+            dx - Shape: (N, in_features),
+            dW - Shape: (out_features, in_features)
+            db - Shape: (out_features).
+        """
+        print(dout.shape)
+        print(in_array.shape)
+        dx = dout @ self.weight
+        dW = dout.transpose() @ in_array
+        db = np.sum(dout, axis=0)
+
+        return dx, dW, db
