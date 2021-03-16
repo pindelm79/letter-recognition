@@ -388,4 +388,10 @@ class Linear(_Layer):
             dW - Shape: (out_features, in_features)
             db - Shape: (out_features).
         """
-        return super().backward()
+        print(dout.shape)
+        print(in_array.shape)
+        dx = dout @ self.weight
+        dW = dout.transpose() @ in_array
+        db = np.sum(dout, axis=0)
+
+        return dx, dW, db
