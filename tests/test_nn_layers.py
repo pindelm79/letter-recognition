@@ -3,10 +3,10 @@ from typing import Tuple
 import numpy as np
 import pytest
 import torch
-import torch.nn
+import torch.nn as nn_torch
 import torch.nn.functional as F
 
-from letter_recognition.nn import layers
+import letter_recognition.nn as nn_custom
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ class TestConv2d:
         # For now, just checking if there are no errors.
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")
-        conv2d = layers.Conv2d(
+        conv2d = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=bias
         )
         out = conv2d.forward(in_array)
@@ -52,7 +52,7 @@ class TestConv2d:
         in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
-        conv2d_custom = layers.Conv2d(
+        conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=bias
         )
         out_custom = conv2d_custom.forward(in_array)
@@ -83,7 +83,7 @@ class TestConv2d:
         in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
-        conv2d_custom = layers.Conv2d(
+        conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding
         )
         out_shape_custom = conv2d_custom.calculate_output_shape(in_shape)
@@ -108,7 +108,7 @@ class TestConv2d:
         in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
-        conv2d_custom = layers.Conv2d(in_channels, out_channels, kernel_size)
+        conv2d_custom = nn_custom.Conv2d(in_channels, out_channels, kernel_size)
 
         weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
         bias_tensor = torch.from_numpy(conv2d_custom.bias).float()
@@ -146,7 +146,7 @@ class TestConv2d:
         in_array = np.random.randint(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
-        conv2d_custom = layers.Conv2d(
+        conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding
         )
 
@@ -186,7 +186,7 @@ class TestConv2d:
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
 
-        conv2d_custom = layers.Conv2d(
+        conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding
         )
 
