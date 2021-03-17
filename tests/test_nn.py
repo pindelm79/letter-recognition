@@ -68,6 +68,7 @@ class TestConv2d:
             torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
         )
 
+    @pytest.mark.here
     def test_backward(
         self,
         batch_size,
@@ -77,19 +78,14 @@ class TestConv2d:
         out_channels,
         kernel_size,
         padding,
-        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = np.random.randint(0, 256, in_shape).astype("float")
         conv2d_custom = nn_custom.Conv2d(
-            in_channels, out_channels, kernel_size, padding=padding, bias=bias
+            in_channels, out_channels, kernel_size, padding=padding, bias=True
         )
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
-
-        conv2d_custom = nn_custom.Conv2d(
-            in_channels, out_channels, kernel_size, padding=padding, bias=True
-        )
 
         weight_tensor = torch.from_numpy(conv2d_custom.weight).float()
         weight_tensor.requires_grad_(True)
