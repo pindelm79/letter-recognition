@@ -347,7 +347,3 @@ class Linear(_Layer):
         db = np.sum(dout, axis=0)
 
         return dx, dW, db
-
-
-if __name__ == "__main__":
-    print("ok")
