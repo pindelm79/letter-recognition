@@ -106,7 +106,7 @@ class Conv2d(_Layer):
         output = np.empty(self._calculate_output_shape(in_array.shape))
 
         if self.padding != (0, 0):
-            in_array = self.pad(in_array, self.padding)
+            in_array = self._pad(in_array, self.padding)
 
         for n in range(output.shape[0]):  # N
             for f in range(output.shape[1]):  # output channels
@@ -149,7 +149,6 @@ class Conv2d(_Layer):
         return dx, dW, db
 
     # ---Private helper functions.---
-
     def _calculate_weight_gradient(
         self, dout: np.ndarray, in_array: np.ndarray
     ) -> np.ndarray:
@@ -348,3 +347,7 @@ class Linear(_Layer):
         db = np.sum(dout, axis=0)
 
         return dx, dW, db
+
+
+if __name__ == "__main__":
+    print("ok")
