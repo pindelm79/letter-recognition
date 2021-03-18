@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
 import torch
-import torch.nn as nn_torch
 import torch.nn.functional as F
 
-import letter_recognition.nn as nn_custom
+import letter_recognition.nn.layers as nn_custom
 
 
 @pytest.mark.parametrize("batch_size", [1, 10])
