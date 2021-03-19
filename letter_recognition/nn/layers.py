@@ -23,7 +23,37 @@ class _Layer(ABC):
 
 
 class Conv2d(_Layer):
-    """Defines a 2D convolution layer."""
+    """Defines a 2D convolution layer.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of channels in the input.
+    out_channels : int
+        Number of channels in the output.
+    kernel_size : int or tuple of 2 ints
+        Size of the convolving kernel. If a single int - it is the value for height and width.
+        If a tuple of 2 ints - first is used for height, second for width.
+    stride : int or tuple of 2 ints
+        Step size of the convolution. For now, can only be (1, 1).
+    padding : int or tuple of 2 ints
+        Zero-padding added to all sides of the input. If a single int - it is the value for height
+        and width. If a tuple of 2 ints - first is used for height, second for width.
+    bias : bool
+        If True, adds a leanable bias to the output.
+
+    Attributes
+    ----------
+    in_channels
+    out_channels
+    kernel_size
+    stride
+    padding
+    weight : np.ndarray
+        Learnable kernel of shape (out_channels, in_channels, kernel_height, kernel_width).
+    bias : np.ndarray
+        Learnable additive bias of shape (out_channels).
+    """
 
     def __init__(
         self,
@@ -34,19 +64,6 @@ class Conv2d(_Layer):
         padding: Union[int, Tuple[int, int]] = 0,
         bias: bool = True,
     ):
-        """
-        Args:
-            in_channels: Number of channels in the input.
-            out_channels: Number of channels produced by the convolution layer.
-            kernel_size: Size of the convolving kernel. If a single int - it is the value for
-                height and width. If a tuple of 2 ints - first is used for height, second for
-                width.
-            stride: Stride ("step size") of the convolution.
-            padding: Zero-padding added to both sides of the input. If a single int - specified
-                number of zeros is added to all sides. If a tuple of 2 ints - first is used for
-                adding zeros vertically, second horizontally.
-            bias: If True, adds a learnable bias to the output.
-        """
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -88,20 +105,22 @@ class Conv2d(_Layer):
     def forward(self, in_array: np.ndarray) -> np.ndarray:
         """Applies the specified 2D convolution over an input.
 
+        Parameters
+        ----------
+        in_array : np.ndarray
+            The input to apply the convolution to. Shape (N, C_in, H_in, W_in).
+
+        Returns
+        -------
+        np.ndarray
+            The output of the convolution. Shape: (N, C_out, H_out, W_out).
+
+        Notes
+        -----
         Formula:
-            out(N_i, C_out_j) = bias(C_out_j) + Sum(from k=0 to C_in-1) of
+        .. math::
+            out[N_i, C_out_j] = bias[C_out_j] + sum(from k=0 to C_in-1) of:
             cross-correlate(kernel(C_out_j, k), input(N_i, k))
-
-        Args:
-            in_array: The input to be apply the convolution to. Shape: (N, C_in, H_in, W_in), where
-                N = number of samples; C_in = number of channels in the input; H_in = height of
-                the input; W_in = width of the input.
-
-        Returns:
-            The output of the convolution. Shape: (N, C_out, H_out, W_out), where N = number of
-                samples; C_out = number of channels in the output; H_out = height of the output,
-                calculated from the input and parameters; W_out = width of the output, calculated
-                from the input and parameters.
         """
         output = np.empty(self._calculate_output_shape(in_array.shape))
 
@@ -124,17 +143,23 @@ class Conv2d(_Layer):
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Does backpropagation through the conv2d layer.
 
-        Assumes stride = 1.
+        Parameters
+        ----------
+        dout : np.ndarray
+            "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
+        in_array : np.ndarray
+            Last input to the layer. Shape: (N, C_in, H_in, W_in).
 
-        Args:
-            dout: "Upstream" gradients. Shape: (N, C_out, H_out, W_out).
-            in_array: Last input to the layer. Shape: (N, C_in, H_in, W_in).
+        Returns
+        -------
+        tuple of 3 numpy arrays:
+            dx - Shape: (N, C_in, H, W),
+            dW - Shape: (C_out, C_in, kernel_H, kernel_W)
+            db - Shape: (C_out).
 
-        Returns:
-            A tuple of:
-                dx - Shape: (N, C_in, H, W),
-                dW - Shape: (C_out, C_in, kernel_H, kernel_W)
-                db - Shape: (C_out).
+        Notes
+        -----
+        Assumes stride=1.
         """
         dx = self._calculate_input_gradient(dout, in_array)
 
@@ -217,12 +242,16 @@ class Conv2d(_Layer):
     def _calculate_output_shape(
         self, input_shape: Tuple[int, int, int, int]
     ) -> Tuple[int, int, int, int]:
-        """Helper function to calculate the shape of the output of the convolution.
+        """Calculates the shape of the output of the convolution.
 
-        Args:
-            input_size: Shape of the input.
+        Parameters
+        ----------
+        input_size : tuple of 4 ints
+            Shape of the input.
 
-        Returns:
+        Returns
+        -------
+        tuple of 4 ints
             Shape of the convolution output.
         """
         out_height = (
