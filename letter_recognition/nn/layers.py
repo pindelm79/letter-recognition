@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
 import math
+import warnings
 
 import numpy as np
 from scipy import signal
@@ -75,7 +76,7 @@ class Conv2d(_Layer):
             self.kernel_size = kernel_size
 
         if stride != 1 and stride != (1, 1):
-            raise Warning("Strides different than 1 are currently not supported.")
+            warnings.warn("Strides different than 1 are currently not supported.")
         self.stride = (1, 1)
 
         if isinstance(padding, int):
