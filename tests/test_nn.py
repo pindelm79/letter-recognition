@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
 import torch
+import torch.nn
 import torch.nn.functional as F
 
 import letter_recognition.nn.layers as nn_custom
+import letter_recognition.nn.loss as loss_custom
 
 
 @pytest.mark.parametrize("batch_size", [1, 10])
@@ -207,3 +209,27 @@ class TestLinear:
         out = linear.forward(in_array)
         dout = np.full_like(out, 2)
         dx, dW, db = linear.backward(dout, in_array)
+
+
+@pytest.mark.parametrize("batch_size", [1, 4, 50])
+@pytest.mark.parametrize("reduction", ["none", "mean", "sum"])
+class TestMAE:
+    def test_calculate(self, batch_size, reduction):
+        predicted_array = np.random.randint(0, 2, batch_size)
+        predicted_tensor = torch.from_numpy(predicted_array).float()
+        target_array = np.random.randint(0, 2, batch_size)
+        target_tensor = torch.from_numpy(target_array).float()
+
+        mae_custom = loss_custom.MAE(reduction)
+        out_custom = mae_custom.calculate(predicted_array, target_array)
+
+        mae_torch = torch.nn.L1Loss(reduction=reduction)
+        out_torch = mae_torch(predicted_tensor, target_tensor)
+
+        assert out_custom.shape == out_torch.size()
+        if reduction == "none":
+            assert torch.allclose(
+                torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
+            )
+        else:
+            assert out_custom == out_torch
