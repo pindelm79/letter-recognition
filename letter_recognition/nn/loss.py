@@ -1,6 +1,7 @@
 """This module contains loss functions to evaluate model performance."""
 
 from abc import ABC, abstractmethod
+import warnings
 
 import numpy as np
 
@@ -19,7 +20,21 @@ class _Loss(ABC):
 
 
 class MAE(_Loss):
-    """Simple mean absolute error loss."""
+    """Simple mean absolute error loss.
+
+    Parameters
+    ----------
+    reduction : 'none' | 'mean' | 'sum
+        'none': no reduction will be applied; 'mean': the sum of the output will be divided by its size;
+        'sum': the output will be summed.
+    """
+
+    def __init__(self, reduction: str = "mean"):
+        reduction = reduction.lower()
+        if reduction not in ["none", "mean", "sum"]:
+            warnings.warn("Wrong reduction mode! Setting to default 'mean'.")
+            reduction = "mean"
+        self.reduction = reduction
 
     def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
         """Calculates the mean absolute error loss.
@@ -36,7 +51,12 @@ class MAE(_Loss):
         np.ndarray
             Mean absolute error.
         """
-        return np.abs(predicted - target)
+        if self.reduction == "none":
+            return np.abs(predicted - target)
+        elif self.reduction == "mean":
+            return np.mean(np.abs(predicted - target))
+        elif self.reduction == "sum":
+            return np.sum(np.abs(predicted - target))
 
     def backward(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
         """Calculates the gradient of the input to the loss.
@@ -52,13 +72,23 @@ class MAE(_Loss):
         -------
         np.ndarray
             Gradient of the input.
+
+        Notes
+        -----
+            If the reduction was 'sum' or no reduction, the gradient factor is 1.
+            If 'mean', it is 1/N.
         """
         gradient = np.zeros_like(predicted)
-        for i in range(predicted.shape[0]):  # number of samples
+
+        grad_factor = 1.0
+        if self.reduction == "mean":
+            grad_factor = 1 / gradient.shape[0]  # 1 / N
+
+        for i in range(predicted.shape[0]):  # N
             if predicted[i] > target[i]:
-                gradient[i] = 1
+                gradient[i] = grad_factor
             elif predicted[i] < target[i]:
-                gradient[i] = -1
+                gradient[i] = -grad_factor
             else:
                 gradient[i] = 0
 
