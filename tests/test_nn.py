@@ -213,11 +213,14 @@ class TestLinear:
 
 @pytest.mark.parametrize("batch_size", [1, 4, 50])
 @pytest.mark.parametrize("reduction", ["none", "mean", "sum"])
+@pytest.mark.parametrize("max_value", [1, 255])
 class TestMAE:
-    def test_calculate(self, batch_size, reduction):
-        predicted_array = np.random.randint(0, 2, batch_size)
+    def test_calculate(self, batch_size, reduction, max_value):
+        predicted_array = np.random.randint(0, max_value + 1, batch_size).astype(
+            "float"
+        )
         predicted_tensor = torch.from_numpy(predicted_array).float()
-        target_array = np.random.randint(0, 2, batch_size)
+        target_array = np.random.randint(0, max_value + 1, batch_size).astype("float")
         target_tensor = torch.from_numpy(target_array).float()
 
         mae_custom = loss_custom.MAE(reduction)
@@ -233,3 +236,25 @@ class TestMAE:
             )
         else:
             assert out_custom == out_torch
+
+    def test_backward(self, batch_size, reduction, max_value):
+        predicted_array = np.random.randint(0, max_value + 1, batch_size).astype(
+            "float"
+        )
+        predicted_tensor = torch.from_numpy(predicted_array).float()
+        predicted_tensor.requires_grad_(True)
+        target_array = np.random.randint(0, max_value + 1, batch_size).astype("float")
+        target_tensor = torch.from_numpy(target_array).float()
+
+        mae_custom = loss_custom.MAE(reduction)
+        grad_custom = mae_custom.backward(predicted_array, target_array)
+
+        mae_torch = torch.nn.L1Loss(reduction=reduction)
+        out_torch = mae_torch(predicted_tensor, target_tensor)
+        out_torch.sum().backward()
+        grad_torch = predicted_tensor.grad
+
+        assert grad_custom.shape == grad_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(grad_custom).float(), grad_torch, atol=1e-4
+        )

@@ -89,7 +89,5 @@ class MAE(_Loss):
                 gradient[i] = grad_factor
             elif predicted[i] < target[i]:
                 gradient[i] = -grad_factor
-            else:
-                gradient[i] = 0
 
         return gradient
