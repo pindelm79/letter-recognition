@@ -1,13 +1,14 @@
 """This module contains layers which can be added into a model."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Union
 import math
+from typing import Tuple, Union
 import warnings
 
 import numpy as np
 from scipy import signal
 
+from letter_recognition import RNG
 import letter_recognition.nn.ffunctions as fast
 
 
@@ -87,7 +88,7 @@ class Conv2d(_Layer):
         self._use_bias = bias
 
         k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
-        self.weight = np.random.uniform(
+        self.weight = RNG.uniform(
             -math.sqrt(k),
             math.sqrt(k),
             (
@@ -99,9 +100,7 @@ class Conv2d(_Layer):
         )
         if self._use_bias:
             k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
-            self.bias = np.random.uniform(
-                -math.sqrt(k), math.sqrt(k), self.out_channels
-            )
+            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), self.out_channels)
         else:
             self.bias = np.zeros(self.out_channels)
 
@@ -271,11 +270,11 @@ class Linear(_Layer):
 
         # Weight and bias initialization (as in PyTorch)
         k = 1 / in_features
-        self.weight = np.random.uniform(
+        self.weight = RNG.uniform(
             -math.sqrt(k), math.sqrt(k), (out_features, in_features)
         )
         if self._use_bias:
-            self.bias = np.random.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
+            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
         else:
             self.bias = np.zeros((out_features,))
 
@@ -317,8 +316,6 @@ class Linear(_Layer):
             dW - Shape: (out_features, in_features)
             db - Shape: (out_features).
         """
-        print(dout.shape)
-        print(in_array.shape)
         dx = dout @ self.weight
         dW = dout.transpose() @ in_array
         db = np.sum(dout, axis=0)

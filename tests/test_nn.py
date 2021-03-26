@@ -4,6 +4,7 @@ import torch
 import torch.nn
 import torch.nn.functional as F
 
+from tests import RNG
 import letter_recognition.nn.layers as nn_custom
 import letter_recognition.nn.loss as loss_custom
 
@@ -29,7 +30,7 @@ class TestConv2d:
     ):
         # For now, just checking if there are no errors.
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         conv2d = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=bias
         )
@@ -50,7 +51,7 @@ class TestConv2d:
         bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = nn_custom.Conv2d(
@@ -80,7 +81,7 @@ class TestConv2d:
         padding,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=True
         )
@@ -137,7 +138,7 @@ class TestLinear:
     @pytest.mark.parametrize("bias", [False, True])
     def test_forward(self, batch_size, in_features, out_features, bias):
         in_shape = (batch_size, in_features)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         linear_custom = nn_custom.Linear(in_features, out_features, bias)
@@ -154,7 +155,7 @@ class TestLinear:
 
     def test_backward(self, batch_size, in_features, out_features):
         in_shape = (batch_size, in_features)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
 
@@ -204,7 +205,7 @@ class TestLinear:
     def test_integration(self, batch_size, in_features, out_features, bias):
         # For now, just checking if there are no errors.
         in_shape = (batch_size, in_features)
-        in_array = np.random.randint(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
         linear = nn_custom.Linear(in_features, out_features, bias)
         out = linear.forward(in_array)
         dout = np.full_like(out, 2)
@@ -216,11 +217,9 @@ class TestLinear:
 @pytest.mark.parametrize("max_value", [1, 255])
 class TestMAE:
     def test_calculate(self, batch_size, reduction, max_value):
-        predicted_array = np.random.randint(0, max_value + 1, batch_size).astype(
-            "float"
-        )
+        predicted_array = RNG.integers(0, max_value + 1, batch_size).astype("float")
         predicted_tensor = torch.from_numpy(predicted_array).float()
-        target_array = np.random.randint(0, max_value + 1, batch_size).astype("float")
+        target_array = RNG.integers(0, max_value + 1, batch_size).astype("float")
         target_tensor = torch.from_numpy(target_array).float()
 
         mae_custom = loss_custom.MAE(reduction)
@@ -238,12 +237,10 @@ class TestMAE:
             assert out_custom == out_torch
 
     def test_backward(self, batch_size, reduction, max_value):
-        predicted_array = np.random.randint(0, max_value + 1, batch_size).astype(
-            "float"
-        )
+        predicted_array = RNG.integers(0, max_value + 1, batch_size).astype("float")
         predicted_tensor = torch.from_numpy(predicted_array).float()
         predicted_tensor.requires_grad_(True)
-        target_array = np.random.randint(0, max_value + 1, batch_size).astype("float")
+        target_array = RNG.integers(0, max_value + 1, batch_size).astype("float")
         target_tensor = torch.from_numpy(target_array).float()
 
         mae_custom = loss_custom.MAE(reduction)

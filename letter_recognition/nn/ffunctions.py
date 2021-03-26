@@ -1,6 +1,4 @@
 """This module contains fast helper functions for the nn package, wrapped with numba."""
-from typing import Tuple
-
 from numba import njit
 import numpy as np
 
