@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import math
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 import warnings
 
 import numpy as np
@@ -321,3 +321,114 @@ class Linear(_Layer):
         db = np.sum(dout, axis=0)
 
         return dx, dW, db
+
+
+class MaxPool2d(_Layer):
+    """Defines a 2D max pooling layer.
+
+    Parameters
+    ----------
+    kernel_size : int or tuple of 2 ints
+        The size of the window to take a max over.
+    stride : None or int or tuple of 2 ints, optional
+        The stride of the window. If None it is equal to kernel_size.
+        As of now, it can only be None or equal to kernel_size. By default None.
+    padding : int or tuple of 2 ints, optional
+        Implicit zero padding to be added on both sides. Must be equal to or smaller than half of
+        kernel size. By default 0.
+    dilation : int or tuple of 2 ints, optional
+        A parameter that controls the stride of elements in the window.
+        As of now, it can only be 1. By default 1.
+    return_indices : bool
+        If True, will return a list of tuples with the indices of max values along with the usual
+        output. By default False.
+    ceil_mode : bool
+        If True, will use ceil instead of floor to compute the output shape. Sliding windows will
+        be allowed to go off-bounds if they start within the left padding or the input.
+        By default False.
+    """
+
+    def __init__(
+        self,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Union[None, int, Tuple[int, int]] = None,
+        padding: Union[int, Tuple[int, int]] = 0,
+        dilation: Union[int, Tuple[int, int]] = 1,
+        return_indices: bool = False,
+        ceil_mode: bool = False,
+    ):
+        if isinstance(kernel_size, int):
+            self.kernel_size = (kernel_size, kernel_size)
+        else:
+            self.kernel_size = kernel_size
+
+        if stride is not None and (stride != kernel_size or stride != self.kernel_size):
+            raise RuntimeError(
+                "Strides different than kernel size are currently not supported!"
+            )
+        self.stride = self.kernel_size
+
+        if isinstance(padding, int):
+            self.padding = (padding, padding)
+        else:
+            self.padding = padding
+        if (self.padding[0] >= self.kernel_size[0] / 2) or (
+            self.padding[1] >= self.kernel_size[1] / 2
+        ):
+            raise RuntimeError(
+                "Padding must be equal to or smaller than half of kernel size."
+            )
+
+        if isinstance(dilation, int):
+            self.dilation = (dilation, dilation)
+        else:
+            self.dilation = dilation
+        if dilation != (1, 1):
+            raise RuntimeError(
+                "Dilations different than 1 are currently not supported."
+            )
+
+        self.return_indices = return_indices
+        self.ceil_mode = ceil_mode
+
+    def forward(
+        self, in_array: np.ndarray
+    ) -> Union[np.ndarray, Tuple[np.ndarray, List[Tuple]]]:
+        """Does the maxpooling over the specified input.
+
+        Parameters
+        ----------
+        in_array : np.ndarray
+            The input array to max pool over. Shape: (N, C, H_in, W_in).
+
+        Returns
+        -------
+        ndarray or tuple of 2 ndarrays
+            Returns the output of maxpooling. Shape: (N, C, H_out, W_out).
+            If return_indices=True, also returns a list of tuples with the indices of max values.
+        """
+        return super().forward(in_array)
+
+    def backward(
+        self,
+        dout: np.ndarray,
+        in_array: np.ndarray,
+        max_indices: Union[np.ndarray, None] = None,
+    ) -> np.ndarray:
+        """Return the gradient of the output w.r.t. the maxpool input.
+
+        Parameters
+        ----------
+        dout : np.ndarray
+            "Upstream" gradient. Shape: (N, C, H_out, W_out).
+        in_array : np.ndarray
+            Previous input. Shape: (N, C, H_in, W_in).
+        max_indices : np.ndarray or None, optional
+            If not None, a list of max indices corresponding to the in_array. By default None.
+
+        Returns
+        -------
+        np.ndarray
+            Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
+        """
+        return super().backward(dout, in_array)
