@@ -1,7 +1,6 @@
 """This module contains loss functions to evaluate model performance."""
 
 from abc import ABC, abstractmethod
-import warnings
 
 import numpy as np
 
@@ -32,8 +31,7 @@ class MAE(_Loss):
     def __init__(self, reduction: str = "mean"):
         reduction = reduction.lower()
         if reduction not in ["none", "mean", "sum"]:
-            warnings.warn("Wrong reduction mode! Setting to default 'mean'.")
-            reduction = "mean"
+            raise RuntimeError("Wrong reduction mode!")
         self.reduction = reduction
 
     def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
