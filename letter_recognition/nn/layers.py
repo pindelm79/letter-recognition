@@ -34,16 +34,16 @@ class Conv2d(_Layer):
         Number of channels in the input.
     out_channels : int
         Number of channels in the output.
-    kernel_size : int or tuple of 2 ints
+    kernel_size : int or tuple of 2 ints, optional
         Size of the convolving kernel. If a single int - it is the value for height and width.
         If a tuple of 2 ints - first is used for height, second for width.
-    stride : int or tuple of 2 ints
-        Step size of the convolution. For now, can only be (1, 1).
-    padding : int or tuple of 2 ints
+    stride : int or tuple of 2 ints, optional
+        Step size of the convolution. As of now, it can only be (1, 1).
+    padding : int or tuple of 2 ints, optional
         Zero-padding added to all sides of the input. If a single int - it is the value for height
-        and width. If a tuple of 2 ints - first is used for height, second for width.
-    bias : bool
-        If True, adds a leanable bias to the output.
+        and width. If a tuple of 2 ints - first is used for height, second for width. By default 0.
+    bias : bool, optional
+        If True, adds a leanable bias to the output. By default True.
 
     Attributes
     ----------
@@ -250,7 +250,7 @@ class Linear(_Layer):
     out_features : int
         Size of each output sample.
     bias : bool, optional
-        If True, adds a learnable bias to the output.
+        If True, adds a learnable bias to the output. By default True.
 
     Attributes
     ----------
@@ -337,11 +337,11 @@ class MaxPool2d(_Layer):
         kernel size. By default 0.
     dilation : int or tuple of 2 ints, optional
         A parameter that controls the stride of elements in the window.
-        As of now, it can only be 1. By default 1.
-    return_indices : bool
+        As of now, it can only be 1.
+    return_indices : bool, optional
         If True, will return a list of tuples with the indices of max values along with the usual
         output. By default False.
-    ceil_mode : bool
+    ceil_mode : bool, optional
         If True, will use ceil instead of floor to compute the output shape. Sliding windows will
         be allowed to go off-bounds if they start within the left padding or the input.
         By default False.

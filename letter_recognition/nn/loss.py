@@ -23,9 +23,9 @@ class MAE(_Loss):
 
     Parameters
     ----------
-    reduction : 'none' | 'mean' | 'sum
-        'none': no reduction will be applied; 'mean': the sum of the output will be divided by its size;
-        'sum': the output will be summed.
+    reduction : 'none' | 'mean' | 'sum', optional
+        'none': no reduction will be applied, 'mean': the sum of the output will be divided by its size,
+        'sum': the output will be summed. By default 'mean'.
     """
 
     def __init__(self, reduction: str = "mean"):
