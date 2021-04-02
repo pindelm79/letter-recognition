@@ -1,7 +1,7 @@
 """This module contains layers which can be added into a model."""
 
 from abc import ABC, abstractmethod
-import math
+from math import ceil, floor, sqrt
 from typing import List, Tuple, Union
 
 import numpy as np
@@ -88,8 +88,8 @@ class Conv2d(_Layer):
 
         k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
         self.weight = RNG.uniform(
-            -math.sqrt(k),
-            math.sqrt(k),
+            -sqrt(k),
+            sqrt(k),
             (
                 self.out_channels,
                 self.in_channels,
@@ -99,7 +99,7 @@ class Conv2d(_Layer):
         )
         if self._use_bias:
             k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
-            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), self.out_channels)
+            self.bias = RNG.uniform(-sqrt(k), sqrt(k), self.out_channels)
         else:
             self.bias = np.zeros(self.out_channels)
 
@@ -126,7 +126,7 @@ class Conv2d(_Layer):
         output = np.empty(self._calculate_output_shape(in_array.shape))
 
         if self.padding != (0, 0):
-            in_array = self._pad(in_array)
+            in_array = fast.pad4d(in_array, self.padding)
 
         for n in range(output.shape[0]):  # N
             for f in range(output.shape[1]):  # output channels
@@ -163,7 +163,7 @@ class Conv2d(_Layer):
         Assumes stride = 1.
         """
         if self.padding != (0, 0):
-            in_array = self._pad(in_array)
+            in_array = fast.pad4d(in_array, self.padding)
 
         dx = fast.calculate_input_gradient(dout, in_array, self.weight)
         # Remove padding from output
@@ -207,38 +207,6 @@ class Conv2d(_Layer):
         ) + 1
         return (input_shape[0], self.out_channels, int(out_height), int(out_width))
 
-    def _pad(self, in_array: np.ndarray) -> np.ndarray:
-        """Applies class-specified padding to the 4D input array.
-
-        Parameters
-        ----------
-        in_array : np.ndarray
-            Input array. Shape: (N, C_in, H_in, W_in)
-
-        Returns
-        -------
-        np.ndarray
-            Padded input array.
-        """
-        padded_array = np.zeros(
-            (
-                in_array.shape[0],
-                in_array.shape[1],
-                in_array.shape[2] + 2 * self.padding[0],
-                in_array.shape[3] + 2 * self.padding[1],
-            )
-        )
-        for n in range(in_array.shape[0]):  # N
-            for c in range(in_array.shape[1]):  # input channels
-                padded_array[n, c] = np.pad(
-                    in_array[n, c],
-                    (
-                        (self.padding[0], self.padding[0]),
-                        (self.padding[1], self.padding[1]),
-                    ),
-                )
-        return padded_array
-
 
 class Linear(_Layer):
     """Defines a fully connected (linear) layer.
@@ -269,11 +237,9 @@ class Linear(_Layer):
 
         # Weight and bias initialization (as in PyTorch)
         k = 1 / in_features
-        self.weight = RNG.uniform(
-            -math.sqrt(k), math.sqrt(k), (out_features, in_features)
-        )
+        self.weight = RNG.uniform(-sqrt(k), sqrt(k), (out_features, in_features))
         if self._use_bias:
-            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
+            self.bias = RNG.uniform(-sqrt(k), sqrt(k), (out_features,))
         else:
             self.bias = np.zeros((out_features,))
 
@@ -339,12 +305,18 @@ class MaxPool2d(_Layer):
         A parameter that controls the stride of elements in the window.
         As of now, it can only be 1.
     return_indices : bool, optional
-        If True, will return a list of tuples with the indices of max values along with the usual
+        If True, will return an array of (flat) indices of max values along with the usual
         output. By default False.
     ceil_mode : bool, optional
         If True, will use ceil instead of floor to compute the output shape. Sliding windows will
         be allowed to go off-bounds if they start within the left padding or the input.
         By default False.
+
+    Notes
+    -----
+    In return_indices, the indices are calculated relatively, "inside" each sample and channel.
+    That is, they are flat, but only in the context of the last 2 dimensions (H and W). Also,
+    it doesn't count padding. This was done to ensure test compatibility with PyTorch.
     """
 
     def __init__(
@@ -371,9 +343,10 @@ class MaxPool2d(_Layer):
             self.padding = (padding, padding)
         else:
             self.padding = padding
-        if (self.padding[0] >= self.kernel_size[0] / 2) or (
-            self.padding[1] >= self.kernel_size[1] / 2
+        if (self.padding[0] > (self.kernel_size[0] / 2)) or (
+            self.padding[1] > (self.kernel_size[1] / 2)
         ):
+            print(self.padding)
             raise RuntimeError(
                 "Padding must be equal to or smaller than half of kernel size."
             )
@@ -382,7 +355,7 @@ class MaxPool2d(_Layer):
             self.dilation = (dilation, dilation)
         else:
             self.dilation = dilation
-        if dilation != (1, 1):
+        if self.dilation != (1, 1):
             raise RuntimeError(
                 "Dilations different than 1 are currently not supported."
             )
@@ -392,21 +365,34 @@ class MaxPool2d(_Layer):
 
     def forward(
         self, in_array: np.ndarray
-    ) -> Union[np.ndarray, Tuple[np.ndarray, List[Tuple]]]:
-        """Does the maxpooling over the specified input.
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """Does maxpooling over the specified input.
 
         Parameters
         ----------
         in_array : np.ndarray
-            The input array to max pool over. Shape: (N, C, H_in, W_in).
+            The input array to maxpool over. Shape: (N, C, H_in, W_in).
 
         Returns
         -------
         ndarray or tuple of 2 ndarrays
             Returns the output of maxpooling. Shape: (N, C, H_out, W_out).
-            If return_indices=True, also returns a list of tuples with the indices of max values.
+            If return_indices=True, also returns an array of (flat) indices of max values.
         """
-        return super().forward(in_array)
+        out = np.empty(self._calculate_output_shape(in_array.shape))
+
+        out, max_indices = fast.maxpool2d_forward(
+            in_array,
+            out,
+            self.stride,
+            self.kernel_size,
+            self.padding,
+            self.ceil_mode,
+        )
+
+        if self.return_indices:
+            return out, max_indices
+        return out
 
     def backward(
         self,
@@ -431,3 +417,70 @@ class MaxPool2d(_Layer):
             Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
         """
         return super().backward(dout, in_array)
+
+    def _calculate_output_shape(
+        self, in_shape: Tuple[int, int, int, int]
+    ) -> Tuple[int, int, int, int]:
+        """Calculates the output shape.
+
+        Parameters
+        ----------
+        input_shape : tuple of 4 ints
+            Shape of the input (N, C, H_in, W_in).
+
+        Returns
+        -------
+        tuple of 4 ints
+            Shape of the output (N, C, H_out, W_out).
+        """
+        if not self.ceil_mode:
+            H_out = floor(
+                (
+                    (
+                        in_shape[2]
+                        + 2 * self.padding[0]
+                        - self.dilation[0] * (self.kernel_size[0] - 1)
+                        - 1
+                    )
+                    / self.stride[0]
+                )
+                + 1
+            )
+            W_out = floor(
+                (
+                    (
+                        in_shape[3]
+                        + 2 * self.padding[1]
+                        - self.dilation[1] * (self.kernel_size[1] - 1)
+                        - 1
+                    )
+                    / self.stride[1]
+                )
+                + 1
+            )
+        else:
+            H_out = ceil(
+                (
+                    (
+                        in_shape[2]
+                        + self.padding[0]
+                        - self.dilation[0] * (self.kernel_size[0] - 1)
+                        - 1
+                    )
+                    / self.stride[0]
+                )
+                + 1
+            )
+            W_out = ceil(
+                (
+                    (
+                        in_shape[3]
+                        + self.padding[1]
+                        - self.dilation[1] * (self.kernel_size[1] - 1)
+                        - 1
+                    )
+                    / self.stride[1]
+                )
+                + 1
+            )
+        return (in_shape[0], in_shape[1], H_out, W_out)
