@@ -5,6 +5,7 @@ import torch.nn
 import torch.nn.functional as F
 
 from tests import RNG
+import letter_recognition.nn.activation as activation_custom
 import letter_recognition.nn.layers as nn_custom
 import letter_recognition.nn.loss as loss_custom
 
@@ -30,7 +31,7 @@ class TestConv2d:
     ):
         # For now, just checking if there are no errors.
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         conv2d = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=bias
         )
@@ -51,7 +52,7 @@ class TestConv2d:
         bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         conv2d_custom = nn_custom.Conv2d(
@@ -81,7 +82,7 @@ class TestConv2d:
         padding,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         conv2d_custom = nn_custom.Conv2d(
             in_channels, out_channels, kernel_size, padding=padding, bias=True
         )
@@ -138,7 +139,7 @@ class TestLinear:
     @pytest.mark.parametrize("bias", [False, True])
     def test_forward(self, batch_size, in_features, out_features, bias):
         in_shape = (batch_size, in_features)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         linear_custom = nn_custom.Linear(in_features, out_features, bias)
@@ -155,7 +156,7 @@ class TestLinear:
 
     def test_backward(self, batch_size, in_features, out_features):
         in_shape = (batch_size, in_features)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
 
@@ -223,7 +224,7 @@ class TestMaxPool2d:
         self, batch_size, in_channels, in_H, in_W, kernel_size, padding, ceil_mode
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
 
         maxpool_custom = nn_custom.MaxPool2d(
@@ -247,7 +248,7 @@ class TestMaxPool2d:
         self, batch_size, in_channels, in_H, in_W, kernel_size, padding, ceil_mode
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
-        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
         in_tensor = torch.from_numpy(in_array).float()
         in_tensor.requires_grad_(True)
 
@@ -319,4 +320,43 @@ class TestMAE:
         assert grad_custom.shape == grad_torch.size()
         assert torch.allclose(
             torch.from_numpy(grad_custom).float(), grad_torch, atol=1e-4
+        )
+
+
+@pytest.mark.parametrize("in_shape", [(50, 3, 5, 5), (5, 5), (128, 128, 3)])
+class TestReLU:
+    def test_forward(self, in_shape):
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+
+        relu_custom = activation_custom.ReLU()
+        out_custom = relu_custom.forward(in_array)
+
+        out_torch = F.relu(in_tensor)
+
+        assert out_custom.shape == out_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
+        )
+
+    def test_backward(self, in_shape):
+        in_array = RNG.integers(-127, 128, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+        in_tensor.requires_grad_(True)
+
+        relu_custom = activation_custom.ReLU()
+
+        out_torch = F.relu(in_tensor)
+        out_torch.retain_grad()
+        final = out_torch * 2
+        final.sum().backward()
+
+        input_gradient_torch = in_tensor.grad
+        input_gradient_custom = relu_custom.backward(out_torch.grad.numpy(), in_array)
+
+        assert input_gradient_custom.shape == input_gradient_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(input_gradient_custom).float(),
+            input_gradient_torch,
+            atol=1e-4,
         )
