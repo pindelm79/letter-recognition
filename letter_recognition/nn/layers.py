@@ -1,9 +1,8 @@
 """This module contains layers which can be added into a model."""
 
 from abc import ABC, abstractmethod
-import math
+from math import ceil, floor, sqrt
 from typing import Tuple, Union
-import warnings
 
 import numpy as np
 from scipy import signal
@@ -35,16 +34,16 @@ class Conv2d(_Layer):
         Number of channels in the input.
     out_channels : int
         Number of channels in the output.
-    kernel_size : int or tuple of 2 ints
+    kernel_size : int or tuple of 2 ints, optional
         Size of the convolving kernel. If a single int - it is the value for height and width.
         If a tuple of 2 ints - first is used for height, second for width.
-    stride : int or tuple of 2 ints
-        Step size of the convolution. For now, can only be (1, 1).
-    padding : int or tuple of 2 ints
+    stride : int or tuple of 2 ints, optional
+        Step size of the convolution. As of now, it can only be (1, 1).
+    padding : int or tuple of 2 ints, optional
         Zero-padding added to all sides of the input. If a single int - it is the value for height
-        and width. If a tuple of 2 ints - first is used for height, second for width.
-    bias : bool
-        If True, adds a leanable bias to the output.
+        and width. If a tuple of 2 ints - first is used for height, second for width. By default 0.
+    bias : bool, optional
+        If True, adds a leanable bias to the output. By default True.
 
     Attributes
     ----------
@@ -77,7 +76,7 @@ class Conv2d(_Layer):
             self.kernel_size = kernel_size
 
         if stride != 1 and stride != (1, 1):
-            warnings.warn("Strides different than 1 are currently not supported.")
+            raise RuntimeError("Strides different than 1 are currently not supported.")
         self.stride = (1, 1)
 
         if isinstance(padding, int):
@@ -89,8 +88,8 @@ class Conv2d(_Layer):
 
         k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
         self.weight = RNG.uniform(
-            -math.sqrt(k),
-            math.sqrt(k),
+            -sqrt(k),
+            sqrt(k),
             (
                 self.out_channels,
                 self.in_channels,
@@ -100,7 +99,7 @@ class Conv2d(_Layer):
         )
         if self._use_bias:
             k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
-            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), self.out_channels)
+            self.bias = RNG.uniform(-sqrt(k), sqrt(k), self.out_channels)
         else:
             self.bias = np.zeros(self.out_channels)
 
@@ -127,7 +126,7 @@ class Conv2d(_Layer):
         output = np.empty(self._calculate_output_shape(in_array.shape))
 
         if self.padding != (0, 0):
-            in_array = self._pad(in_array)
+            in_array = fast.pad4d(in_array, self.padding)
 
         for n in range(output.shape[0]):  # N
             for f in range(output.shape[1]):  # output channels
@@ -164,7 +163,7 @@ class Conv2d(_Layer):
         Assumes stride = 1.
         """
         if self.padding != (0, 0):
-            in_array = self._pad(in_array)
+            in_array = fast.pad4d(in_array, self.padding)
 
         dx = fast.calculate_input_gradient(dout, in_array, self.weight)
         # Remove padding from output
@@ -208,38 +207,6 @@ class Conv2d(_Layer):
         ) + 1
         return (input_shape[0], self.out_channels, int(out_height), int(out_width))
 
-    def _pad(self, in_array: np.ndarray) -> np.ndarray:
-        """Applies class-specified padding to the 4D input array.
-
-        Parameters
-        ----------
-        in_array : np.ndarray
-            Input array. Shape: (N, C_in, H_in, W_in)
-
-        Returns
-        -------
-        np.ndarray
-            Padded input array.
-        """
-        padded_array = np.zeros(
-            (
-                in_array.shape[0],
-                in_array.shape[1],
-                in_array.shape[2] + 2 * self.padding[0],
-                in_array.shape[3] + 2 * self.padding[1],
-            )
-        )
-        for n in range(in_array.shape[0]):  # N
-            for c in range(in_array.shape[1]):  # input channels
-                padded_array[n, c] = np.pad(
-                    in_array[n, c],
-                    (
-                        (self.padding[0], self.padding[0]),
-                        (self.padding[1], self.padding[1]),
-                    ),
-                )
-        return padded_array
-
 
 class Linear(_Layer):
     """Defines a fully connected (linear) layer.
@@ -251,7 +218,7 @@ class Linear(_Layer):
     out_features : int
         Size of each output sample.
     bias : bool, optional
-        If True, adds a learnable bias to the output.
+        If True, adds a learnable bias to the output. By default True.
 
     Attributes
     ----------
@@ -270,11 +237,9 @@ class Linear(_Layer):
 
         # Weight and bias initialization (as in PyTorch)
         k = 1 / in_features
-        self.weight = RNG.uniform(
-            -math.sqrt(k), math.sqrt(k), (out_features, in_features)
-        )
+        self.weight = RNG.uniform(-sqrt(k), sqrt(k), (out_features, in_features))
         if self._use_bias:
-            self.bias = RNG.uniform(-math.sqrt(k), math.sqrt(k), (out_features,))
+            self.bias = RNG.uniform(-sqrt(k), sqrt(k), (out_features,))
         else:
             self.bias = np.zeros((out_features,))
 
@@ -321,3 +286,201 @@ class Linear(_Layer):
         db = np.sum(dout, axis=0)
 
         return dx, dW, db
+
+
+class MaxPool2d(_Layer):
+    """Defines a 2D max pooling layer.
+
+    Parameters
+    ----------
+    kernel_size : int or tuple of 2 ints
+        The size of the window to take a max over.
+    stride : None or int or tuple of 2 ints, optional
+        The stride of the window. If None it is equal to kernel_size.
+        As of now, it can only be None or equal to kernel_size. By default None.
+    padding : int or tuple of 2 ints, optional
+        Implicit zero padding to be added on both sides. Must be equal to or smaller than half of
+        kernel size. By default 0.
+    dilation : int or tuple of 2 ints, optional
+        A parameter that controls the stride of elements in the window.
+        As of now, it can only be 1.
+    return_indices : bool, optional
+        If True, will return an array of (flat) indices of max values along with the usual
+        output. By default True.
+    ceil_mode : bool, optional
+        If True, will use ceil instead of floor to compute the output shape. Sliding windows will
+        be allowed to go off-bounds if they start within the left padding or the input.
+        By default False.
+
+    Notes
+    -----
+    In return_indices, the indices are calculated relatively, "inside" each sample and channel.
+    That is, they are flat, but only in the context of the last 2 dimensions (H and W). Also,
+    it doesn't count padding. This was done to ensure test compatibility with PyTorch.
+    """
+
+    def __init__(
+        self,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Union[None, int, Tuple[int, int]] = None,
+        padding: Union[int, Tuple[int, int]] = 0,
+        dilation: Union[int, Tuple[int, int]] = 1,
+        return_indices: bool = True,
+        ceil_mode: bool = False,
+    ):
+        if isinstance(kernel_size, int):
+            self.kernel_size = (kernel_size, kernel_size)
+        else:
+            self.kernel_size = kernel_size
+
+        if stride is not None and (stride != kernel_size or stride != self.kernel_size):
+            raise RuntimeError(
+                "Strides different than kernel size are currently not supported!"
+            )
+        self.stride = self.kernel_size
+
+        if isinstance(padding, int):
+            self.padding = (padding, padding)
+        else:
+            self.padding = padding
+        if (self.padding[0] > (self.kernel_size[0] / 2)) or (
+            self.padding[1] > (self.kernel_size[1] / 2)
+        ):
+            print(self.padding)
+            raise RuntimeError(
+                "Padding must be equal to or smaller than half of kernel size."
+            )
+
+        if isinstance(dilation, int):
+            self.dilation = (dilation, dilation)
+        else:
+            self.dilation = dilation
+        if self.dilation != (1, 1):
+            raise RuntimeError(
+                "Dilations different than 1 are currently not supported."
+            )
+
+        self.return_indices = return_indices
+        self.ceil_mode = ceil_mode
+
+    def forward(
+        self, in_array: np.ndarray
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """Does maxpooling over the specified input.
+
+        Parameters
+        ----------
+        in_array : np.ndarray
+            The input array to maxpool over. Shape: (N, C, H_in, W_in).
+
+        Returns
+        -------
+        ndarray or tuple of 2 ndarrays
+            Returns the output of maxpooling. Shape: (N, C, H_out, W_out).
+            If return_indices=True, also returns an array of (flat) indices of max values.
+        """
+        out = np.empty(self._calculate_output_shape(in_array.shape))
+
+        out, max_indices = fast.maxpool2d_forward(
+            in_array,
+            out,
+            self.stride,
+            self.kernel_size,
+            self.padding,
+            self.ceil_mode,
+        )
+
+        if self.return_indices:
+            return out, max_indices
+        return out
+
+    def backward(
+        self,
+        dout: np.ndarray,
+        in_array: np.ndarray,
+        max_indices: Union[np.ndarray, None],
+    ) -> np.ndarray:
+        """Return the gradient of the output w.r.t. the maxpool input.
+
+        Parameters
+        ----------
+        dout : np.ndarray
+            "Upstream" gradient. Shape: (N, C, H_out, W_out).
+        in_array : np.ndarray
+            Previous input. Shape: (N, C, H_in, W_in).
+        max_indices : np.ndarray or None
+            If not None, an array of max indices in the in_array. As of now, assumes not None.
+
+        Returns
+        -------
+        np.ndarray
+            Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
+        """
+        return fast.maxpool2d_backward(dout, in_array, max_indices)
+
+    def _calculate_output_shape(
+        self, in_shape: Tuple[int, int, int, int]
+    ) -> Tuple[int, int, int, int]:
+        """Calculates the output shape.
+
+        Parameters
+        ----------
+        input_shape : tuple of 4 ints
+            Shape of the input (N, C, H_in, W_in).
+
+        Returns
+        -------
+        tuple of 4 ints
+            Shape of the output (N, C, H_out, W_out).
+        """
+        if not self.ceil_mode:
+            H_out = floor(
+                (
+                    (
+                        in_shape[2]
+                        + 2 * self.padding[0]
+                        - self.dilation[0] * (self.kernel_size[0] - 1)
+                        - 1
+                    )
+                    / self.stride[0]
+                )
+                + 1
+            )
+            W_out = floor(
+                (
+                    (
+                        in_shape[3]
+                        + 2 * self.padding[1]
+                        - self.dilation[1] * (self.kernel_size[1] - 1)
+                        - 1
+                    )
+                    / self.stride[1]
+                )
+                + 1
+            )
+        else:
+            H_out = ceil(
+                (
+                    (
+                        in_shape[2]
+                        + self.padding[0]
+                        - self.dilation[0] * (self.kernel_size[0] - 1)
+                        - 1
+                    )
+                    / self.stride[0]
+                )
+                + 1
+            )
+            W_out = ceil(
+                (
+                    (
+                        in_shape[3]
+                        + self.padding[1]
+                        - self.dilation[1] * (self.kernel_size[1] - 1)
+                        - 1
+                    )
+                    / self.stride[1]
+                )
+                + 1
+            )
+        return (in_shape[0], in_shape[1], H_out, W_out)

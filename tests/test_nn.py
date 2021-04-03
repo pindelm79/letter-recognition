@@ -9,7 +9,7 @@ import letter_recognition.nn.layers as nn_custom
 import letter_recognition.nn.loss as loss_custom
 
 
-@pytest.mark.parametrize("batch_size", [1, 10])
+@pytest.mark.parametrize("batch_size", [1, 8])
 @pytest.mark.parametrize("in_channels", [1, 3])
 @pytest.mark.parametrize("out_channels", [3, 10])
 @pytest.mark.parametrize("in_H, in_W", [(28, 28), (21, 5)])
@@ -131,7 +131,7 @@ class TestConv2d:
         )
 
 
-@pytest.mark.parametrize("batch_size", [1, 4, 50])
+@pytest.mark.parametrize("batch_size", [1, 4, 64])
 @pytest.mark.parametrize("in_features", [3, 100, 500])
 @pytest.mark.parametrize("out_features", [2, 50, 400])
 class TestLinear:
@@ -212,7 +212,72 @@ class TestLinear:
         dx, dW, db = linear.backward(dout, in_array)
 
 
-@pytest.mark.parametrize("batch_size", [1, 4, 50])
+@pytest.mark.parametrize("batch_size", [1, 8])
+@pytest.mark.parametrize("in_channels", [1, 3])
+@pytest.mark.parametrize("in_H, in_W", [(10, 10), (21, 5), (5, 21)])
+@pytest.mark.parametrize("kernel_size", [2, (3, 2), (2, 3)])
+@pytest.mark.parametrize("padding", [0, 1, (1, 0), (0, 1)])
+@pytest.mark.parametrize("ceil_mode", [False, True])
+class TestMaxPool2d:
+    def test_forward(
+        self, batch_size, in_channels, in_H, in_W, kernel_size, padding, ceil_mode
+    ):
+        in_shape = (batch_size, in_channels, in_H, in_W)
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+
+        maxpool_custom = nn_custom.MaxPool2d(
+            kernel_size, padding=padding, ceil_mode=ceil_mode
+        )
+        out_custom, idx_custom = maxpool_custom.forward(in_array)
+
+        out_torch, idx_torch = F.max_pool2d_with_indices(
+            in_tensor, kernel_size, padding=padding, ceil_mode=ceil_mode
+        )
+
+        assert out_custom.shape == out_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(out_custom).float(), out_torch, atol=1e-4
+        )
+
+        assert idx_custom.shape == idx_torch.size()
+        assert torch.equal(torch.from_numpy(idx_custom).int(), idx_torch.int())
+
+    def test_backward(
+        self, batch_size, in_channels, in_H, in_W, kernel_size, padding, ceil_mode
+    ):
+        in_shape = (batch_size, in_channels, in_H, in_W)
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+        in_tensor.requires_grad_(True)
+
+        maxpool_custom = nn_custom.MaxPool2d(
+            kernel_size, padding=padding, ceil_mode=ceil_mode
+        )
+        _, idx_custom = maxpool_custom.forward(in_array)
+
+        out_torch = F.max_pool2d_with_indices(
+            in_tensor, kernel_size, padding=padding, ceil_mode=ceil_mode
+        )[0]
+        out_torch.retain_grad()
+        final = out_torch * 2
+        final.sum().backward()
+
+        input_gradient_torch = in_tensor.grad
+
+        input_gradient_custom = maxpool_custom.backward(
+            out_torch.grad.numpy(), in_array, idx_custom
+        )
+
+        assert input_gradient_custom.shape == input_gradient_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(input_gradient_custom).float(),
+            input_gradient_torch,
+            atol=1e-4,
+        )
+
+
+@pytest.mark.parametrize("batch_size", [1, 4, 64])
 @pytest.mark.parametrize("reduction", ["none", "mean", "sum"])
 @pytest.mark.parametrize("max_value", [1, 255])
 class TestMAE:

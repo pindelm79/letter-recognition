@@ -1,7 +1,6 @@
 """This module contains loss functions to evaluate model performance."""
 
 from abc import ABC, abstractmethod
-import warnings
 
 import numpy as np
 
@@ -24,16 +23,15 @@ class MAE(_Loss):
 
     Parameters
     ----------
-    reduction : 'none' | 'mean' | 'sum
-        'none': no reduction will be applied; 'mean': the sum of the output will be divided by its size;
-        'sum': the output will be summed.
+    reduction : 'none' | 'mean' | 'sum', optional
+        'none': no reduction will be applied, 'mean': the sum of the output will be divided by its size,
+        'sum': the output will be summed. By default 'mean'.
     """
 
     def __init__(self, reduction: str = "mean"):
         reduction = reduction.lower()
         if reduction not in ["none", "mean", "sum"]:
-            warnings.warn("Wrong reduction mode! Setting to default 'mean'.")
-            reduction = "mean"
+            raise RuntimeError("Wrong reduction mode!")
         self.reduction = reduction
 
     def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
