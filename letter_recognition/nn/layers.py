@@ -306,7 +306,7 @@ class MaxPool2d(_Layer):
         As of now, it can only be 1.
     return_indices : bool, optional
         If True, will return an array of (flat) indices of max values along with the usual
-        output. By default False.
+        output. By default True.
     ceil_mode : bool, optional
         If True, will use ceil instead of floor to compute the output shape. Sliding windows will
         be allowed to go off-bounds if they start within the left padding or the input.
@@ -325,7 +325,7 @@ class MaxPool2d(_Layer):
         stride: Union[None, int, Tuple[int, int]] = None,
         padding: Union[int, Tuple[int, int]] = 0,
         dilation: Union[int, Tuple[int, int]] = 1,
-        return_indices: bool = False,
+        return_indices: bool = True,
         ceil_mode: bool = False,
     ):
         if isinstance(kernel_size, int):
@@ -398,7 +398,7 @@ class MaxPool2d(_Layer):
         self,
         dout: np.ndarray,
         in_array: np.ndarray,
-        max_indices: Union[np.ndarray, None] = None,
+        max_indices: Union[np.ndarray, None],
     ) -> np.ndarray:
         """Return the gradient of the output w.r.t. the maxpool input.
 
@@ -408,14 +408,25 @@ class MaxPool2d(_Layer):
             "Upstream" gradient. Shape: (N, C, H_out, W_out).
         in_array : np.ndarray
             Previous input. Shape: (N, C, H_in, W_in).
-        max_indices : np.ndarray or None, optional
-            If not None, a list of max indices corresponding to the in_array. By default None.
+        max_indices : np.ndarray or None
+            If not None, an array of max indices in the in_array. As of now, assumes not None.
 
         Returns
         -------
         np.ndarray
             Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
         """
+        din = np.zeros_like(in_array)
+
+        for N in range(dout.shape[0]):
+            for C in range(dout.shape[1]):
+                for H in range(dout.shape[2]):
+                    for W in range(dout.shape[3]):
+                        max_flat_index = max_indices[N, C, H, W]
+                        din[N, C].flat[max_flat_index] = dout[N, C, H, W]
+
+        return din
+
         return super().backward(dout, in_array)
 
     def _calculate_output_shape(

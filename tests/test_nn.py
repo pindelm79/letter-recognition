@@ -227,7 +227,7 @@ class TestMaxPool2d:
         in_tensor = torch.from_numpy(in_array).float()
 
         maxpool_custom = nn_custom.MaxPool2d(
-            kernel_size, padding=padding, ceil_mode=ceil_mode, return_indices=True
+            kernel_size, padding=padding, ceil_mode=ceil_mode
         )
         out_custom, idx_custom = maxpool_custom.forward(in_array)
 
@@ -242,6 +242,39 @@ class TestMaxPool2d:
 
         assert idx_custom.shape == idx_torch.size()
         assert torch.equal(torch.from_numpy(idx_custom).int(), idx_torch.int())
+
+    def test_backward(
+        self, batch_size, in_channels, in_H, in_W, kernel_size, padding, ceil_mode
+    ):
+        in_shape = (batch_size, in_channels, in_H, in_W)
+        in_array = RNG.integers(0, 256, in_shape).astype("float")
+        in_tensor = torch.from_numpy(in_array).float()
+        in_tensor.requires_grad_(True)
+
+        maxpool_custom = nn_custom.MaxPool2d(
+            kernel_size, padding=padding, ceil_mode=ceil_mode
+        )
+        _, idx_custom = maxpool_custom.forward(in_array)
+
+        out_torch = F.max_pool2d_with_indices(
+            in_tensor, kernel_size, padding=padding, ceil_mode=ceil_mode
+        )[0]
+        out_torch.retain_grad()
+        final = out_torch * 2
+        final.sum().backward()
+
+        input_gradient_torch = in_tensor.grad
+
+        input_gradient_custom = maxpool_custom.backward(
+            out_torch.grad.numpy(), in_array, idx_custom
+        )
+
+        assert input_gradient_custom.shape == input_gradient_torch.size()
+        assert torch.allclose(
+            torch.from_numpy(input_gradient_custom).float(),
+            input_gradient_torch,
+            atol=1e-4,
+        )
 
 
 @pytest.mark.parametrize("batch_size", [1, 4, 64])
