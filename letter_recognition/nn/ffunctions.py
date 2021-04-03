@@ -186,6 +186,40 @@ def maxpool2d_forward(
     return out, max_indices
 
 
+@njit
+def maxpool2d_backward(
+    dout: np.ndarray,
+    in_array: np.ndarray,
+    max_indices: Union[np.ndarray, None],
+) -> np.ndarray:
+    """Return the gradient of the output w.r.t. the maxpool input.
+
+    Parameters
+    ----------
+    dout : np.ndarray
+        "Upstream" gradient. Shape: (N, C, H_out, W_out).
+    in_array : np.ndarray
+        Previous input. Shape: (N, C, H_in, W_in).
+    max_indices : np.ndarray or None
+        If not None, an array of max indices in the in_array. As of now, assumes not None.
+
+    Returns
+    -------
+    np.ndarray
+        Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
+    """
+    din = np.zeros_like(in_array)
+
+    for N in range(dout.shape[0]):
+        for C in range(dout.shape[1]):
+            for H in range(dout.shape[2]):
+                for W in range(dout.shape[3]):
+                    max_flat_index = max_indices[N, C, H, W]
+                    din[N, C].flat[max_flat_index] = dout[N, C, H, W]
+
+    return din
+
+
 # ---Other helper functions---
 def pad4d(in_array: np.ndarray, padding: Tuple[int, int]) -> np.ndarray:
     """Pads 3rd and 4th dims of a 4D array with zeros.

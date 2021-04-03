@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from math import ceil, floor, sqrt
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 from scipy import signal
@@ -416,18 +416,7 @@ class MaxPool2d(_Layer):
         np.ndarray
             Gradient of the output w.r.t. the maxpool input. Shape: (N, C, H_in, W_in).
         """
-        din = np.zeros_like(in_array)
-
-        for N in range(dout.shape[0]):
-            for C in range(dout.shape[1]):
-                for H in range(dout.shape[2]):
-                    for W in range(dout.shape[3]):
-                        max_flat_index = max_indices[N, C, H, W]
-                        din[N, C].flat[max_flat_index] = dout[N, C, H, W]
-
-        return din
-
-        return super().backward(dout, in_array)
+        return fast.maxpool2d_backward(dout, in_array, max_indices)
 
     def _calculate_output_shape(
         self, in_shape: Tuple[int, int, int, int]
