@@ -1,6 +1,7 @@
 """This module contains loss functions to evaluate model performance."""
 
 from abc import ABC, abstractmethod
+from typing import Union
 
 import numpy as np
 
@@ -89,3 +90,34 @@ class MAE(_Loss):
                 gradient[i] = -grad_factor
 
         return gradient
+
+
+class CrossEntropy(_Loss):
+    """Combines log(Softmax(x)) with negative log likelihood.
+
+    In a multi-class classification problem, it describes "how correct/wrong" the probability
+    of the correct class is.
+
+    Parameters
+    ----------
+    weight : ndarray or None, optional
+        If not None, expects an array of size C (number of classes) with weight given to each
+        class. Useful with unbalanced classes. If None, it assumes all weights are 1.
+        By default None.
+    reduction : 'none' | 'mean' | 'sum', optional
+        'none': no reduction will be applied, 'mean': the sum of the output will be divided by its size,
+        'sum': the output will be summed. By default 'mean'.
+    """
+
+    def __init__(self, weight: Union[np.ndarray, None] = None, reduction: str = "mean"):
+        self.weight = weight
+        reduction = reduction.lower()
+        if reduction not in ["none", "mean", "sum"]:
+            raise RuntimeError("Wrong reduction mode!")
+        self.reduction = reduction
+
+    def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
+        return super().calculate(predicted, target)
+
+    def backward(self, predicted: np.ndarray) -> np.ndarray:
+        return super().backward(predicted)
