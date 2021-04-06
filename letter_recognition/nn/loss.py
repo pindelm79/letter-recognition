@@ -156,5 +156,41 @@ class CrossEntropy(_Loss):
         elif self.reduction == "mean":
             return np.sum(loss_array) / weight_sum
 
-    def backward(self, predicted: np.ndarray) -> np.ndarray:
-        return super().backward(predicted)
+    def backward(self, predicted: np.ndarray, true_classes: np.ndarray) -> np.ndarray:
+        """Calculates the gradient of the input to the loss.
+
+        Parameters
+        ----------
+        predicted : np.ndarray
+            Values predicted by the model. Shape: (N, C).
+        true_classes : ndarray of ints (each from 0 to C-1).
+            Array of index of the correct classes. Shape: (N,).
+
+        Returns
+        -------
+        np.ndarray
+            Gradient of the input.
+        """
+        if self.weight is None:
+            self.weight = np.ones(predicted.shape[1])  # C
+
+        gradient = np.zeros_like(predicted)
+        weight_sum = 0.0
+
+        for N in range(predicted.shape[0]):  # N
+            true_class = int(true_classes[N])
+            for C in range(predicted.shape[1]):  # C
+                if C == true_class:
+                    gradient[N, C] = (
+                        np.exp(predicted[N, C]) / np.sum(np.exp(predicted[N]))
+                    ) - 1
+                else:
+                    gradient[N, C] = np.exp(predicted[N, C]) / np.sum(
+                        np.exp(predicted[N])
+                    )
+                gradient[N, C] *= self.weight[true_class]
+            weight_sum += self.weight[true_class]
+
+        if self.reduction == "mean":
+            return gradient / weight_sum
+        return gradient

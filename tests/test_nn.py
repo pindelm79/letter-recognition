@@ -231,7 +231,7 @@ class TestReLU:
 
 
 @pytest.mark.parametrize("batch_size", [1, 4, 64])
-@pytest.mark.parametrize("class_count", [10, 26])
+@pytest.mark.parametrize("class_count", [5, 26])
 @pytest.mark.parametrize("use_weight", [False, True])
 @pytest.mark.parametrize("reduction", ["none", "mean", "sum"])
 @pytest.mark.parametrize("max_value", [1, 255])
@@ -256,6 +256,30 @@ class TestCrossEntropy:
 
         assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
+
+    def test_backward(self, batch_size, class_count, use_weight, reduction, max_value):
+        weight_array = None
+        weight_torch = None
+        if use_weight:
+            weight_array = RNG.uniform(size=class_count)
+            weight_torch = torch.from_numpy(weight_array).float()
+
+        in_shape = (batch_size, class_count)
+        predicted_array = RNG.integers(0, max_value + 1, in_shape).astype("float")
+        class_array = RNG.integers(0, class_count, batch_size)
+        ce_custom = loss_custom.CrossEntropy(weight=weight_array, reduction=reduction)
+        grad_custom = ce_custom.backward(predicted_array, class_array)
+
+        predicted_tensor = torch.from_numpy(predicted_array).float()
+        predicted_tensor.requires_grad_()
+        class_tensor = torch.from_numpy(class_array)
+        ce_torch = torch.nn.CrossEntropyLoss(weight=weight_torch, reduction=reduction)
+        out_torch = ce_torch(predicted_tensor, class_tensor)
+        out_torch.sum().backward()
+        grad_torch = predicted_tensor.grad
+
+        assert grad_custom.shape == grad_torch.size()
+        assert np.allclose(grad_custom, grad_torch, atol=1e-4)
 
 
 @pytest.mark.parametrize("batch_size", [1, 4, 64])
