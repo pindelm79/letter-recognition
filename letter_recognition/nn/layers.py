@@ -55,7 +55,7 @@ class Conv2d(_Layer):
     weight : np.ndarray
         Learnable kernel of shape (out_channels, in_channels, kernel_height, kernel_width).
     bias : np.ndarray
-        Learnable additive bias of shape (out_channels).
+        Optional learnable additive bias of shape (out_channels).
     """
 
     def __init__(
@@ -98,7 +98,6 @@ class Conv2d(_Layer):
             ),
         )
         if self._use_bias:
-            k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
             self.bias = RNG.uniform(-sqrt(k), sqrt(k), self.out_channels)
         else:
             self.bias = np.zeros(self.out_channels)
