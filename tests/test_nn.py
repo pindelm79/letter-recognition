@@ -323,6 +323,35 @@ class TestMAE:
         )
 
 
+@pytest.mark.parametrize("batch_size", [1, 4, 64])
+@pytest.mark.parametrize("class_count", [10, 26])
+@pytest.mark.parametrize("use_weight", [False, True])
+@pytest.mark.parametrize("reduction", ["none", "mean", "sum"])
+@pytest.mark.parametrize("max_value", [1, 255])
+class TestCrossEntropy:
+    def test_calculate(self, batch_size, class_count, use_weight, reduction, max_value):
+        in_shape = (batch_size, class_count)
+        predicted_array = RNG.integers(0, max_value + 1, in_shape).astype("float")
+        predicted_tensor = torch.from_numpy(predicted_array).float()
+        class_array = RNG.integers(0, class_count, batch_size)
+        class_tensor = torch.from_numpy(class_array)
+
+        weight_np = None
+        weight_torch = None
+        if use_weight:
+            weight_np = RNG.uniform(size=class_count)
+            weight_torch = torch.from_numpy(weight_np).float()
+
+        ce_custom = loss_custom.CrossEntropy(weight=weight_np, reduction=reduction)
+        out_custom = ce_custom.calculate(predicted_array, class_array)
+
+        ce_torch = torch.nn.CrossEntropyLoss(weight=weight_torch, reduction=reduction)
+        out_torch = ce_torch(predicted_tensor, class_tensor)
+
+        assert out_custom.shape == out_torch.size()
+        assert np.allclose(out_custom, out_torch, atol=1e-4)
+
+
 @pytest.mark.parametrize("in_shape", [(50, 3, 5, 5), (5, 5), (128, 128, 3)])
 class TestReLU:
     def test_forward(self, in_shape):

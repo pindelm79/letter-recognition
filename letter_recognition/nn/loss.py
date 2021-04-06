@@ -35,20 +35,22 @@ class MAE(_Loss):
             raise RuntimeError("Wrong reduction mode!")
         self.reduction = reduction
 
-    def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
+    def calculate(
+        self, predicted: np.ndarray, target: np.ndarray
+    ) -> Union[float, np.ndarray]:
         """Calculates the mean absolute error loss.
 
         Parameters
         ----------
-        in_array : np.ndarray
+        predicted : np.ndarray
             Output of a model. Shape: (N).
         target : np.ndarray
             Target (true) values. Shape: (N).
 
         Returns
         -------
-        np.ndarray
-            Mean absolute error.
+        float or np.ndarray
+            If no reduction, returns a loss for each N. Otherwise, returns the aggregated loss.
         """
         if self.reduction == "none":
             return np.abs(predicted - target)
@@ -116,8 +118,43 @@ class CrossEntropy(_Loss):
             raise RuntimeError("Wrong reduction mode!")
         self.reduction = reduction
 
-    def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
-        return super().calculate(predicted, target)
+    def calculate(
+        self, predicted: np.ndarray, true_classes: np.ndarray
+    ) -> Union[float, np.ndarray]:
+        """Calculates the cross entropy loss.
+
+        Parameters
+        ----------
+        predicted : np.ndarray
+            Values predicted by the model. Shape: (N, C).
+        true_classes : ndarray of ints (each from 0 to C-1).
+            Array of index of the correct classes. Shape: (N,).
+
+        Returns
+        -------
+        float or np.ndarray
+            If no reduction, returns a loss for each N. Otherwise, returns the aggregated loss.
+        """
+        if self.weight is None:
+            self.weight = np.ones(predicted.shape[1])  # C
+
+        loss_array = np.empty(predicted.shape[0])  # N
+        weight_sum = 0.0
+
+        for N in range(loss_array.shape[0]):
+            true_class = int(true_classes[N])
+            loss_array[N] = -predicted[N, true_class] + np.log(
+                np.sum(np.exp(predicted[N]))
+            )
+            loss_array[N] *= self.weight[true_class]
+            weight_sum += self.weight[true_class]
+
+        if self.reduction == "none":
+            return loss_array
+        elif self.reduction == "sum":
+            return np.sum(loss_array)
+        elif self.reduction == "mean":
+            return np.sum(loss_array) / weight_sum
 
     def backward(self, predicted: np.ndarray) -> np.ndarray:
         return super().backward(predicted)
