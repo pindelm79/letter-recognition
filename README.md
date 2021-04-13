@@ -4,11 +4,15 @@ This is a public version of my engineering thesis "Application of neural network
 
 ## Installation
 
-TBD
+As of now, the only way is to download the source code (and set up the environment using poetry.lock).
 
 ## Usage
 
-TBD
+To run the training script, run
+```bash
+python -m letter_recognition.nn
+```
+in the top directory.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
