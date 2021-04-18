@@ -81,7 +81,6 @@ def calculate_weight_gradient(
 
 
 # ---MaxPool2d helper functions---
-# @njit
 def maxpool2d_forward(
     in_array: np.ndarray,
     out: np.ndarray,
