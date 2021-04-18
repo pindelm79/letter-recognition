@@ -56,3 +56,31 @@ class ReLU(_Activation):
         din[in_array > 0] = 1
 
         return din * dout
+
+
+class Softmax(_Activation):
+    """Applies the softmax activation."""
+
+    def forward(self, in_array: np.ndarray) -> np.ndarray:
+        """Applies the softmax.
+
+        Parameters
+        ----------
+        in_array : np.ndarray
+            Input. Shape: (N, C).
+
+        Returns
+        -------
+        np.ndarray
+            Array of probabilities. Shape: (N, C)
+        """
+        out = np.empty_like(in_array)
+
+        for N in range(in_array.shape[0]):
+            for C in range(in_array.shape[1]):
+                out[N, C] = np.exp(in_array[N, C]) / np.sum(np.exp(in_array[N]))
+
+        return out
+
+    def backward(self, dout: np.ndarray, in_array: np.ndarray):
+        raise NotImplementedError()

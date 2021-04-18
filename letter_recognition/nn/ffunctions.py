@@ -81,6 +81,7 @@ def calculate_weight_gradient(
 
 
 # ---MaxPool2d helper functions---
+@njit
 def maxpool2d_forward(
     in_array: np.ndarray,
     out: np.ndarray,
@@ -161,12 +162,14 @@ def maxpool2d_forward(
                             w_slice_start:w_slice_end,
                         ]
                     )
-                    index_slice = np.unravel_index(
-                        index_slice_flat,
-                        (
-                            h_slice_end - h_slice_start,
-                            w_slice_end - w_slice_start,
-                        ),
+                    # Unravel index (1D to 2D)
+                    slice_shape = (
+                        h_slice_end - h_slice_start,
+                        w_slice_end - w_slice_start,
+                    )
+                    index_slice = (
+                        index_slice_flat // slice_shape[1],
+                        index_slice_flat % slice_shape[1],
                     )
 
                     # Calculate 2d flat and non-flat index from the slice
@@ -174,9 +177,8 @@ def maxpool2d_forward(
                         h_slice_start + index_slice[0],
                         w_slice_start + index_slice[1],
                     )
-                    index_2d_flat = np.ravel_multi_index(
-                        index_2d, (in_array.shape[2], in_array.shape[3])
-                    )
+                    shape_2d = (in_array.shape[2], in_array.shape[3])
+                    index_2d_flat = index_2d[0] * shape_2d[1] + index_2d[1]
 
                     # Assign the value and index
                     out[N, C, h, w] = in_array[N, C, index_2d[0], index_2d[1]]
