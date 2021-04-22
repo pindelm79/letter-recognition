@@ -316,3 +316,20 @@ class TestMAE:
 
         assert grad_custom.shape == grad_torch.size()
         assert np.allclose(grad_custom, grad_torch, atol=1e-4)
+
+
+@pytest.mark.parametrize("batch_size", [1, 4, 64])
+@pytest.mark.parametrize("class_count", [5, 26])
+@pytest.mark.parametrize("max_value", [1, 255])
+class TestSoftmax:
+    def test_forward(self, batch_size, class_count, max_value):
+        in_shape = (batch_size, class_count)
+        in_array = RNG.integers(0, max_value + 1, in_shape).astype("float")
+        softmax_custom = activation_custom.Softmax()
+        out_custom = softmax_custom.forward(in_array)
+
+        in_tensor = torch.from_numpy(in_array).float()
+        out_torch = F.softmax(in_tensor)
+
+        assert out_custom.shape == out_torch.size()
+        assert np.allclose(out_custom, out_torch, atol=1e-4)
