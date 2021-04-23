@@ -1,6 +1,5 @@
 """This module contains fast helper functions for the nn package, usually wrapped with numba."""
 from typing import Tuple, Union
-from _pytest.fixtures import wrap_function_to_error_out_if_called_directly
 
 from numba import njit
 import numpy as np
@@ -113,8 +112,6 @@ def maxpool2d_forward(
         Output of the maxpool.
         If return_indices=True, also returns an array of (flat) indices of max values.
     """
-    # TODO: write a numba-friendly version of the function - ravel/unravel are problematic
-
     max_indices = np.empty(out.shape, dtype="int64")
 
     for N in range(out.shape[0]):

@@ -139,3 +139,5 @@ cython_debug/
 
 # vs code
 .vscode/
+
+letter_recognition/data/temp/
