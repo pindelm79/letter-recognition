@@ -40,7 +40,7 @@ softmax = activation.Softmax()
 
 # Model loading
 with open("letter_recognition/data/models/lenet5.npz", "rb") as f:
-    model_params = np.load(f)
+    model_params = np.load(f, allow_pickle=True)
     conv1.weight = model_params["conv1weight"]
     conv1.bias = model_params["conv1bias"]
     conv2.weight = model_params["conv2weight"]
