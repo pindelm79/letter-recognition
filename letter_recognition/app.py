@@ -110,15 +110,16 @@ def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
     return (max(probabilities, key=probabilities.get), probabilities)
 
 
-@app.route("/", methods=["POST", "GET"])
+@app.route("/")
 def predict():
-    if request.method == "POST":
-        f = request.files["file"]
-        img_bytes = f.read()
-        predicted, probabilities = get_prediction(img_bytes)
-        return jsonify({"predicted": predicted, "probabilities": probabilities})
-    if request.method == "GET":
-        return "Hello, World!"
+    # if request.method == "POST":
+    #     f = request.files["file"]
+    #     img_bytes = f.read()
+    #     predicted, probabilities = get_prediction(img_bytes)
+    #     return jsonify({"predicted": predicted, "probabilities": probabilities})
+    # if request.method == "GET":
+    #     return "Hello, World!"
+    return "Hello, World!"
 
 
 # @app.route("/")
