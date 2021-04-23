@@ -106,7 +106,7 @@ def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
     return (max(probabilities, key=probabilities.get), probabilities)
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def predict():
     if request.method == "POST":
         f = request.files["file"]
