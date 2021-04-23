@@ -39,18 +39,29 @@ relu = activation.ReLU()
 softmax = activation.Softmax()
 
 # Model loading
-with open("letter_recognition/data/models/lenet5.npz", "rb") as f:
-    model_params = np.load("letter_recognition/data/models/lenet5.npz")
-    conv1.weight = model_params["conv1weight"]
-    conv1.bias = model_params["conv1bias"]
-    conv2.weight = model_params["conv2weight"]
-    conv2.bias = model_params["conv2bias"]
-    linear1.weight = model_params["linear1weight"]
-    linear1.bias = model_params["linear1bias"]
-    linear2.weight = model_params["linear2weight"]
-    linear2.bias = model_params["linear2bias"]
-    linear3.weight = model_params["linear3weight"]
-    linear3.bias = model_params["linear3bias"]
+conv1.weight = np.load("letter_recognition/data/models/lenet5/conv1weight.npy")
+conv1.bias = np.load("letter_recognition/data/models/lenet5/conv1bias.npy")
+conv2.weight = np.load("letter_recognition/data/models/lenet5/conv2weight.npy")
+conv2.bias = np.load("letter_recognition/data/models/lenet5/conv2bias.npy")
+linear1.weight = np.load("letter_recognition/data/models/lenet5/linear1weight.npy")
+linear1.bias = np.load("letter_recognition/data/models/lenet5/linear1bias.npy")
+linear2.weight = np.load("letter_recognition/data/models/lenet5/linear2weight.npy")
+linear2.bias = np.load("letter_recognition/data/models/lenet5/linear2bias.npy")
+linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.npy")
+linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
+
+# with open("letter_recognition/data/models/lenet5.npz", "rb") as f:
+#     model_params = np.load("letter_recognition/data/models/lenet5.npz")
+#     conv1.weight = model_params["conv1weight"]
+#     conv1.bias = model_params["conv1bias"]
+#     conv2.weight = model_params["conv2weight"]
+#     conv2.bias = model_params["conv2bias"]
+#     linear1.weight = model_params["linear1weight"]
+#     linear1.bias = model_params["linear1bias"]
+#     linear2.weight = model_params["linear2weight"]
+#     linear2.bias = model_params["linear2bias"]
+#     linear3.weight = model_params["linear3weight"]
+#     linear3.bias = model_params["linear3bias"]
 
 
 def transform_image(image_bytes: bytes) -> np.ndarray:
