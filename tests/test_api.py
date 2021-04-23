@@ -21,9 +21,10 @@ def test_model():
     image_pil.save("letter_recognition/data/temp/tmp.png")
 
     response = requests.post(
-        "http://localhost:5000/predict",
+        "https://letterrecognitionapi.azurewebsites.net/",
         files={"file": open("letter_recognition/data/temp/tmp.png", "rb")},
     )
 
     letter_mapping = dict(zip(range(26), string.ascii_uppercase))
     assert letter_mapping[labels[i]] == response.json()["predicted"]
+    print(response.json())
