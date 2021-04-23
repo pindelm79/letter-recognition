@@ -26,5 +26,5 @@ def test_model():
     )
 
     letter_mapping = dict(zip(range(26), string.ascii_uppercase))
-    assert letter_mapping[labels[i]] == response.json()["predicted"]
     print(response.json())
+    assert letter_mapping[labels[i]] == response.json()["predicted"]
