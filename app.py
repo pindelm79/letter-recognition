@@ -11,11 +11,6 @@ import letter_recognition.nn.activation as activation
 
 app = Flask(__name__)
 
-
-# @app.route("/")
-# def hello():
-#     return "Hello, World 3"
-
 # Model hyperparameters
 conv1_out_channels = 6
 conv1_kernel_size = (5, 5)
@@ -49,19 +44,6 @@ linear2.weight = np.load("letter_recognition/data/models/lenet5/linear2weight.np
 linear2.bias = np.load("letter_recognition/data/models/lenet5/linear2bias.npy")
 linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.npy")
 linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
-
-# with open("letter_recognition/data/models/lenet5.npz", "rb") as f:
-#     model_params = np.load("letter_recognition/data/models/lenet5.npz")
-#     conv1.weight = model_params["conv1weight"]
-#     conv1.bias = model_params["conv1bias"]
-#     conv2.weight = model_params["conv2weight"]
-#     conv2.bias = model_params["conv2bias"]
-#     linear1.weight = model_params["linear1weight"]
-#     linear1.bias = model_params["linear1bias"]
-#     linear2.weight = model_params["linear2weight"]
-#     linear2.bias = model_params["linear2bias"]
-#     linear3.weight = model_params["linear3weight"]
-#     linear3.bias = model_params["linear3bias"]
 
 
 def transform_image(image_bytes: bytes) -> np.ndarray:
@@ -124,13 +106,12 @@ def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
     return (max(probabilities, key=probabilities.get), probabilities)
 
 
-@app.route("/")
+@app.route("/", methods=["POST", "GET"])
 def predict():
-    # if request.method == "POST":
-    #     f = request.files["file"]
-    #     img_bytes = f.read()
-    #     predicted, probabilities = get_prediction(img_bytes)
-    #     return jsonify({"predicted": predicted, "probabilities": probabilities})
-    # if request.method == "GET":
-    #     return "Hello, World!"
-    return "test1"
+    if request.method == "POST":
+        f = request.files["file"]
+        img_bytes = f.read()
+        predicted, probabilities = get_prediction(img_bytes)
+        return jsonify({"predicted": predicted, "probabilities": probabilities})
+    if request.method == "GET":
+        return "Letter Recognition Model API"
