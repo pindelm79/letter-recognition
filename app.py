@@ -63,8 +63,11 @@ def transform_image(image_bytes: bytes) -> np.ndarray:
     image_pil = ImageOps.grayscale(image_pil)
     image = np.asarray(image_pil)
 
-    image_normalized = (image - np.min(image)) / (np.max(image) - np.min(image))
-    return image_normalized.reshape(1, 1, 28, 28)
+    threshold = ((np.max(image) + np.mean(image)) / 2) * (
+        1 - 0.2 * (1 - np.std(image) / 128)
+    )
+    image_binarized = np.where(image > threshold, 1.0, 0.0)
+    return image_binarized.reshape(1, 1, 28, 28)
 
 
 def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
