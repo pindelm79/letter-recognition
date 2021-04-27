@@ -1,6 +1,7 @@
+import base64
 import io
 import string
-from typing import Tuple
+from typing import Tuple, Union
 
 from flask import Flask, jsonify, request
 import numpy as np
@@ -46,20 +47,23 @@ linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.np
 linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
 
 
-def transform_image(image_bytes: bytes) -> np.ndarray:
+def transform_image(image_encoded: Union(str, bytes)) -> np.ndarray:
     """Transforms an image to the input expected by the model.
 
     Parameters
     ----------
-    image : bytes
-        A bytes version of the image (size: 28x28 - maybe RGB?).
+    image_encoded : string or bytes
+        String or bytes representation of the image (size: 28x28 - maybe RGB?).
 
     Returns
     -------
     np.ndarray
         Transformed image.
     """
-    image_pil = Image.open(io.BytesIO(image_bytes))
+    if isinstance(image_encoded, str):
+        image_encoded = image_encoded.encode()
+
+    image_pil = Image.open(io.BytesIO(image_encoded))
     image_pil = ImageOps.grayscale(image_pil)
     image = np.asarray(image_pil)
 
@@ -67,16 +71,17 @@ def transform_image(image_bytes: bytes) -> np.ndarray:
         1 - 0.2 * (1 - np.std(image) / 128)
     )
     image_binarized = np.where(image > threshold, 1.0, 0.0)
+
     return image_binarized.reshape(1, 1, 28, 28)
 
 
-def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
+def get_prediction(image_encoded: Union(str, bytes)) -> Tuple[str, np.ndarray]:
     """Gets the prediction for a given numpy image.
 
     Parameters
     ----------
-    image : bytes
-        A bytes version of the image.
+    image_encoded : string or bytes
+        String or bytes representation of the image (size: 28x28 - maybe RGB?).
 
     Returns
     -------
@@ -84,7 +89,7 @@ def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
         The predicted letter and the probabilities for each letter.
     """
     # Data loading
-    x = transform_image(image_bytes)
+    x = transform_image(image_encoded)
 
     # Go through the model
     out_conv1 = conv1.forward(x)
@@ -112,9 +117,8 @@ def get_prediction(image_bytes: bytes) -> Tuple[str, np.ndarray]:
 @app.route("/", methods=["GET", "POST"])
 def predict():
     if request.method == "POST":
-        f = request.files["file"]
-        img_bytes = f.read()
-        predicted, probabilities = get_prediction(img_bytes)
+        image_encoded = request.files["file"]
+        predicted, probabilities = get_prediction(image_encoded)
         return jsonify({"predicted": predicted, "probabilities": probabilities})
     if request.method == "GET":
         return "Letter Recognition Model API"
