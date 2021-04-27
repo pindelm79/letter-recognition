@@ -47,7 +47,7 @@ linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.np
 linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
 
 
-def transform_image(image_encoded: Union(str, bytes)) -> np.ndarray:
+def transform_image(image_encoded: Union[str, bytes]) -> np.ndarray:
     """Transforms an image to the input expected by the model.
 
     Parameters
@@ -75,7 +75,7 @@ def transform_image(image_encoded: Union(str, bytes)) -> np.ndarray:
     return image_binarized.reshape(1, 1, 28, 28)
 
 
-def get_prediction(image_encoded: Union(str, bytes)) -> Tuple[str, np.ndarray]:
+def get_prediction(image_encoded: Union[str, bytes]) -> Tuple[str, np.ndarray]:
     """Gets the prediction for a given numpy image.
 
     Parameters
@@ -117,7 +117,8 @@ def get_prediction(image_encoded: Union(str, bytes)) -> Tuple[str, np.ndarray]:
 @app.route("/", methods=["GET", "POST"])
 def predict():
     if request.method == "POST":
-        image_encoded = request.files["file"]
+        f = request.files["file"]
+        image_encoded = f.read()
         predicted, probabilities = get_prediction(image_encoded)
         return jsonify({"predicted": predicted, "probabilities": probabilities})
     if request.method == "GET":
