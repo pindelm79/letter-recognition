@@ -64,9 +64,12 @@ def transform_image(image_encoded: Union[str, bytes]) -> np.ndarray:
         image_encoded = image_encoded.encode()
 
     image_pil = Image.open(io.BytesIO(image_encoded))
+
+    if image_pil.size != (28, 28):
+        image_pil = image_pil.resize((28, 28))
+
     image_pil = ImageOps.grayscale(image_pil)
     image = np.asarray(image_pil)
-
     threshold = ((np.max(image) + np.mean(image)) / 2) * (
         1 - 0.2 * (1 - np.std(image) / 128)
     )
