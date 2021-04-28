@@ -4,6 +4,7 @@ import string
 from typing import Tuple, Union
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import numpy as np
 from PIL import Image, ImageOps
 
@@ -11,6 +12,8 @@ import letter_recognition.nn.layers as nn
 import letter_recognition.nn.activation as activation
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config["CORS_HEADERS"] = "Content-Type"
 
 # Model hyperparameters
 conv1_out_channels = 6
@@ -47,27 +50,28 @@ linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.np
 linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
 
 
-def transform_image(image_encoded: Union[str, bytes]) -> np.ndarray:
+def transform_image(image_b64: Union[str, bytes]) -> np.ndarray:
     """Transforms an image to the input expected by the model.
 
     Parameters
     ----------
     image_encoded : string or bytes
-        String or bytes representation of the image (size: 28x28 - maybe RGB?).
+        Base-64 string or bytes representation of the image.
 
     Returns
     -------
     np.ndarray
         Transformed image.
     """
-    if isinstance(image_encoded, str):
-        image_encoded = image_encoded.encode()
+    # Decoding
+    if isinstance(image_b64, str):
+        image_b64 = image_b64.encode()
+    image_bytes = base64.b64decode(image_b64)
+    image_pil = Image.open(io.BytesIO(image_bytes))
 
-    image_pil = Image.open(io.BytesIO(image_encoded))
-
+    # Processing
     if image_pil.size != (28, 28):
         image_pil = image_pil.resize((28, 28))
-
     image_pil = ImageOps.grayscale(image_pil)
     image = np.asarray(image_pil)
     threshold = ((np.max(image) + np.mean(image)) / 2) * (
@@ -78,13 +82,13 @@ def transform_image(image_encoded: Union[str, bytes]) -> np.ndarray:
     return image_binarized.reshape(1, 1, 28, 28)
 
 
-def get_prediction(image_encoded: Union[str, bytes]) -> Tuple[str, np.ndarray]:
+def get_prediction(image_b64: Union[str, bytes]) -> Tuple[str, np.ndarray]:
     """Gets the prediction for a given numpy image.
 
     Parameters
     ----------
     image_encoded : string or bytes
-        String or bytes representation of the image (size: 28x28 - maybe RGB?).
+        Base-64 string or bytes representation of the image.
 
     Returns
     -------
@@ -92,7 +96,7 @@ def get_prediction(image_encoded: Union[str, bytes]) -> Tuple[str, np.ndarray]:
         The predicted letter and the probabilities for each letter.
     """
     # Data loading
-    x = transform_image(image_encoded)
+    x = transform_image(image_b64)
 
     # Go through the model
     out_conv1 = conv1.forward(x)
@@ -120,9 +124,12 @@ def get_prediction(image_encoded: Union[str, bytes]) -> Tuple[str, np.ndarray]:
 @app.route("/", methods=["GET", "POST"])
 def predict():
     if request.method == "POST":
-        f = request.files["file"]
-        image_encoded = f.read()
-        predicted, probabilities = get_prediction(image_encoded)
-        return jsonify({"predicted": predicted, "probabilities": probabilities})
+        in_json = request.get_json(force=True)
+        image_b64 = in_json["image"]
+        # image_encoded = f.read()
+        predicted, probabilities = get_prediction(image_b64)
+        response = jsonify({"predicted": predicted, "probabilities": probabilities})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
     if request.method == "GET":
         return "Letter Recognition Model API"

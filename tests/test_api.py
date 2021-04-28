@@ -26,15 +26,10 @@ def test_model():
 
     # Encode image as b64
     with open("letter_recognition/data/temp/tmp.png", "rb") as f:
-        img_encoded = base64.b64encode(f.read())
+        img_b64 = base64.b64encode(f.read())
 
-    # Decode image from b64
-    img_decoded = base64.b64decode(img_encoded)
-
-    response = requests.post(
-        "http://127.0.0.1:5000/",
-        files={"file": img_decoded},
-    )
+    to_send = {"image": img_b64.decode()}
+    response = requests.post("http://127.0.0.1:5000/", json=to_send)
 
     letter_mapping = dict(zip(range(26), string.ascii_uppercase))
     print(response.json())
