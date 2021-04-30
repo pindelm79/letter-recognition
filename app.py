@@ -126,10 +126,8 @@ def predict():
     if request.method == "POST":
         in_json = request.get_json(force=True)
         image_b64 = in_json["image"]
-        # image_encoded = f.read()
         predicted, probabilities = get_prediction(image_b64)
         response = jsonify({"predicted": predicted, "probabilities": probabilities})
-        response.headers.add("Access-Control-Allow-Origin", "*")
         return response
     if request.method == "GET":
         return "Letter Recognition Model API"
