@@ -11,7 +11,7 @@ from tests import RNG
 
 def test_model():
     # Load example image
-    with open("letter_recognition/data/dataset/data.npz", "rb") as f:
+    with open("./data/processed/data.npz", "rb") as f:
         data = np.load(f)
         images = data["X"]
         labels = data["Y"]
@@ -22,10 +22,10 @@ def test_model():
     image_pil = Image.fromarray(image)
     if image_pil.mode != "RGB":
         image_pil = image_pil.convert("RGB")
-    image_pil.save("letter_recognition/data/temp/tmp.png")
+    image_pil.save("./tests/test_image.png")
 
     # Encode image as b64
-    with open("letter_recognition/data/temp/tmp.png", "rb") as f:
+    with open("./tests/test_image.png", "rb") as f:
         img_b64 = base64.b64encode(f.read())
 
     to_send = {"image": img_b64.decode()}
