@@ -38,16 +38,16 @@ relu = activation.ReLU()
 softmax = activation.Softmax()
 
 # Model loading
-conv1.weight = np.load("letter_recognition/data/models/lenet5/conv1weight.npy")
-conv1.bias = np.load("letter_recognition/data/models/lenet5/conv1bias.npy")
-conv2.weight = np.load("letter_recognition/data/models/lenet5/conv2weight.npy")
-conv2.bias = np.load("letter_recognition/data/models/lenet5/conv2bias.npy")
-linear1.weight = np.load("letter_recognition/data/models/lenet5/linear1weight.npy")
-linear1.bias = np.load("letter_recognition/data/models/lenet5/linear1bias.npy")
-linear2.weight = np.load("letter_recognition/data/models/lenet5/linear2weight.npy")
-linear2.bias = np.load("letter_recognition/data/models/lenet5/linear2bias.npy")
-linear3.weight = np.load("letter_recognition/data/models/lenet5/linear3weight.npy")
-linear3.bias = np.load("letter_recognition/data/models/lenet5/linear3bias.npy")
+conv1.weight = np.load("models/lenet5/conv1weight.npy")
+conv1.bias = np.load("models/lenet5/conv1bias.npy")
+conv2.weight = np.load("models/lenet5/conv2weight.npy")
+conv2.bias = np.load("models/lenet5/conv2bias.npy")
+linear1.weight = np.load("models/lenet5/linear1weight.npy")
+linear1.bias = np.load("models/lenet5/linear1bias.npy")
+linear2.weight = np.load("models/lenet5/linear2weight.npy")
+linear2.bias = np.load("models/lenet5/linear2bias.npy")
+linear3.weight = np.load("models/lenet5/linear3weight.npy")
+linear3.bias = np.load("models/lenet5/linear3bias.npy")
 
 
 def transform_image(image_b64: Union[str, bytes]) -> np.ndarray:
