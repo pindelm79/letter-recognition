@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "letter-recognition-model-api"
+name = "letter-recognition"
 version = "0.2.0"
 description = ""
 authors = ["Michał Pindel <m.pindel7991@gmail.com>"]
