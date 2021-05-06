@@ -24,9 +24,6 @@ const sendImage = async () => {
     // Response
     predicted = json_response["predicted"];
     probabilities = json_response["probabilities"];
-    var predicted_para = document.createElement("P");
-    predicted_para.innerText = "Predicted letter: " + predicted;
-    document.body.appendChild(predicted_para);
 
     // Cleanup
     delete probabilities[predicted];
@@ -38,9 +35,27 @@ const sendImage = async () => {
         }
         return obj;
     }
-    var probabilities_clean = clean(probabilities);
+    var probabilities_clean = clean(probabilities)
 
-    var probabilities_para = document.createElement("P");
-    probabilities_para.innerText = "Other possibilities: " + JSON.stringify(probabilities_clean);
-    document.body.appendChild(probabilities_para);
+    Swal.fire({
+        title: "I think your letter is " + predicted + ".",
+        confirmButtonColor: '#ff3b3f',
+        confirmButtonText: 'Try again!',
+        showCancelButton: true,
+        cancelButtonColor: '#a9a9a9',
+        cancelButtonText: 'Show details',
+        background: '#efefef'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.reload()
+        }
+        else {
+            Swal.fire({
+                text: "Other possibilities:\n" + JSON.stringify(probabilities_clean),
+                confirmButtonColor: '#ff3b3f'
+            }).then((result) => {
+                window.location.reload()
+            })
+        }
+    })
 }

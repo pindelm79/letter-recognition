@@ -1,5 +1,6 @@
 body{
     background-color: #efefef;
+    font-family: 'Roboto', sans-serif;
 }
 
 .text-center{
@@ -8,14 +9,17 @@ body{
 
 .main-text{
     color: #3d3d3d;
-    font-family: 'Roboto', sans-serif;
-    font-size:xx-large;
-    font-weight: bolder;
+    font-size: xx-large;
+    font-weight: bold;
     margin: 1%;
 }
 
 #buttons{
     margin-top: 1%;
+}
+
+.canvas-container{
+    margin: 0 auto;
 }
 
 a.button{
@@ -24,7 +28,6 @@ a.button{
     margin:0 0.3em 0.3em 0;
     box-sizing: border-box;
     text-decoration:none;
-    font-family:'Roboto',sans-serif;
     font-weight:300;
     color:#efefef;
     background-color:#ff3b3f;
@@ -32,15 +35,11 @@ a.button{
     transition: all 0.2s;
     }
 a.button:hover{
-    background-color:#226160;
+    background-color:#cc2f32;
 }
 @media all and (max-width:30em){
     a.button{
         display:block;
         margin:0.2em auto;
     }
-}
-
-.canvas-container{
-    margin: 0 auto;
 }
