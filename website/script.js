@@ -2,9 +2,9 @@
 window.onload = function () {
     var canvas = new fabric.Canvas('sheet');
     canvas.isDrawingMode = true;
-    canvas.setBackgroundColor('black', canvas.renderAll.bind(canvas));
+    canvas.setBackgroundColor('#a9a9a9', canvas.renderAll.bind(canvas));
     canvas.freeDrawingBrush.width = 20;
-    canvas.freeDrawingBrush.color = "#FFFFFF";
+    canvas.freeDrawingBrush.color = "#ffffff";
 }
 
 // Image sending
@@ -22,8 +22,8 @@ const sendImage = async () => {
     const json_response = await response.json();
 
     // Response
-    predicted = json_response["predicted"]
-    probabilities = json_response["probabilities"]
+    predicted = json_response["predicted"];
+    probabilities = json_response["probabilities"];
     var predicted_para = document.createElement("P");
     predicted_para.innerText = "Predicted letter: " + predicted;
     document.body.appendChild(predicted_para);
@@ -36,9 +36,9 @@ const sendImage = async () => {
                 delete obj[propName];
             }
         }
-        return obj
+        return obj;
     }
-    var probabilities_clean = clean(probabilities)
+    var probabilities_clean = clean(probabilities);
 
     var probabilities_para = document.createElement("P");
     probabilities_para.innerText = "Other possibilities: " + JSON.stringify(probabilities_clean);

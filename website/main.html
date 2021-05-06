@@ -9,9 +9,14 @@
 </head>
 
 <body>
-    <canvas id="sheet" width="400" height="400"></canvas>
-    <button onclick="sendImage()">Recognize</button>
-    <button onClick="window.location.reload();">Reset</button>
+    <div class="text-center">
+        <p class="main-text">LETTER RECOGNITION</p>
+        <canvas id="sheet" width="448" height="448"></canvas>
+        <div id="buttons">
+            <a href="#" class="button" onclick="sendImage()">Recognize</a>
+            <a href="#" class="button" onclick="window.location.reload()">Reset</a>
+        </div>
+    </div>
 </body>
 
 </html>
