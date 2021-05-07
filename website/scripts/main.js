@@ -44,7 +44,6 @@ const sendImage = async () => {
     all_letters = all_letters.filter((el) => {
         return parseFloat(el.probability.toFixed(2)) !== 0;
     })
-    console.log(all_letters)
 
     extra_info = ""
     if (all_letters.length === 0) {
