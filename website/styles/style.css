@@ -4,26 +4,35 @@ body{
     color: #3d3d3d;
 }
 
-.text-center{
+.container{
     text-align:center;
 }
 
 .title-text{
     font-size: 56px;
     font-weight: bold;
-    margin: 0px auto;
+    margin: 0px;
 }
 
 .description-text{
     font-size:25px;
     font-weight: 200;
-    margin: 0px auto;
+    margin: 0px;
 }
 
+.center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -55%);
+    transform: translate(-50%, -55%);
+  }
+
 .draw-text{
-    font-size:25px;
+    font-size:30px;
     font-weight: 300;
-    margin: 19px auto 5px;
+    margin-bottom: 5px;
 }
 
 #buttons{
