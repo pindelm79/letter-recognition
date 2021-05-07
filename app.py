@@ -1,9 +1,9 @@
 import base64
 import io
 import string
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
-from flask import Flask, jsonify, request
+from flask import Flask, json, jsonify, request
 from flask_cors import CORS
 import numpy as np
 from PIL import Image, ImageOps
@@ -115,10 +115,47 @@ def get_prediction(image_b64: Union[str, bytes]) -> Tuple[str, np.ndarray]:
     # Map output (probabilities) to letters
     letters = string.ascii_uppercase
     probabilities = {
-        letters[i]: round(softmax.forward(out_linear3)[0, i], 2)
-        for i in range(len(letters))
+        letters[i]: softmax.forward(out_linear3)[0, i] for i in range(len(letters))
     }
     return (max(probabilities, key=probabilities.get), probabilities)
+
+
+def generate_response(predicted: str, probabilities: Dict) -> str:
+    """Generates the response of the API.
+
+    Parameters
+    ----------
+    predicted : str
+        The predicted letter.
+    probabilities : dict
+        A dictionary mapping letters to their probabilities.
+
+    Returns
+    -------
+    str
+        A JSON response.
+
+    Notes
+    -----
+    Response format:
+    {
+        "predicted": <predicted letter>,
+        "confidence": <probability of the predicted letter>,
+        "all": {
+            {"letter": <letter>, "probability": <probability>},
+            ...
+        }
+    }
+    """
+    all_letters = []
+    for letter in probabilities:
+        all_letters.append({"letter": letter, "probability": probabilities[letter]})
+    response_dict = {
+        "predicted": predicted,
+        "confidence": probabilities[predicted],
+        "all": all_letters,
+    }
+    return jsonify(response_dict)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -127,7 +164,6 @@ def predict():
         in_json = request.get_json(force=True)
         image_b64 = in_json["image"]
         predicted, probabilities = get_prediction(image_b64)
-        response = jsonify({"predicted": predicted, "probabilities": probabilities})
-        return response
+        return generate_response(predicted, probabilities)
     if request.method == "GET":
         return "Letter Recognition Model API"

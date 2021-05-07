@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Letter recognition</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles/style.css">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.4.0/fabric.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script src='scripts/main.js'></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title-text">LETTER RECOGNITION</h1>
+        <p class="description-text">A CNN built from scratch with NumPy.</p>
+        <div class="center">
+            <p class="draw-text">Draw your letter here:</p>
+            <canvas id="sheet" width="504" height="504"></canvas>
+            <div id="buttons">
+                <a href="#" class="button" onclick="sendImage()">Recognize</a>
+                <a href="#" class="button" onclick="window.location.reload()">Reset</a>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>Created by Michał Pindel. See the source code on <a
+                href="https://github.com/pindelm79/letter-recognition">GitHub</a>.</p>
+    </footer>
+</body>
+</body>
+
+</html>
