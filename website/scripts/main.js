@@ -12,8 +12,8 @@ const sendImage = async () => {
     // Sending
     var canvas = document.getElementById("sheet");
     var image_b64 = canvas.toDataURL().replace("data:image/png;base64,", "");
-    var url = 'http://127.0.0.1:5000/'
-    // var url = 'https://letterrecognitionapi.azurewebsites.net/'
+    // var url = 'http://127.0.0.1:5000/'
+    var url = 'https://letterrecognitionapi.azurewebsites.net/'
     const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({ "image": image_b64 }),
