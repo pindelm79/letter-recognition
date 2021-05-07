@@ -164,7 +164,6 @@ def predict():
         in_json = request.get_json(force=True)
         image_b64 = in_json["image"]
         predicted, probabilities = get_prediction(image_b64)
-        # response = jsonify({"predicted": predicted, "probabilities": probabilities})
         return generate_response(predicted, probabilities)
     if request.method == "GET":
         return "Letter Recognition Model API"
