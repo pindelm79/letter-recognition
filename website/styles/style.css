@@ -1,21 +1,33 @@
 body{
     background-color: #efefef;
     font-family: 'Roboto', sans-serif;
+    color: #3d3d3d;
 }
 
 .text-center{
     text-align:center;
 }
 
-.main-text{
-    color: #3d3d3d;
-    font-size: xx-large;
+.title-text{
+    font-size: 56px;
     font-weight: bold;
-    margin: 1%;
+    margin: 0px auto;
+}
+
+.description-text{
+    font-size:25px;
+    font-weight: 200;
+    margin: 0px auto;
+}
+
+.draw-text{
+    font-size:25px;
+    font-weight: 300;
+    margin: 19px auto 5px;
 }
 
 #buttons{
-    margin-top: 1%;
+    margin: 5px auto;
 }
 
 .canvas-container{
@@ -28,7 +40,7 @@ a.button{
     margin:0 0.3em 0.3em 0;
     box-sizing: border-box;
     text-decoration:none;
-    font-weight:300;
+    font-weight:400;
     color:#efefef;
     background-color:#ff3b3f;
     text-align:center;
@@ -42,4 +54,14 @@ a.button:hover{
         display:block;
         margin:0.2em auto;
     }
+}
+
+footer {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    background-color: #caebf2;
+    text-align: center;
+    font-weight: 300;
 }
