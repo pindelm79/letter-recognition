@@ -12,7 +12,9 @@ const sendImage = async () => {
     // Sending
     var canvas = document.getElementById("sheet");
     var image_b64 = canvas.toDataURL().replace("data:image/png;base64,", "");
-    const response = await fetch('https://letterrecognitionapi.azurewebsites.net/', {
+    var url = 'http://127.0.0.1:5000/'
+    // var url = 'https://letterrecognitionapi.azurewebsites.net/'
+    const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({ "image": image_b64 }),
         headers: {
@@ -22,39 +24,62 @@ const sendImage = async () => {
     const json_response = await response.json();
 
     // Response
-    predicted = json_response["predicted"];
-    probabilities = json_response["probabilities"];
+    var predicted = json_response["predicted"]
+    var confidence = json_response["confidence"]
+    var all_letters = json_response["all"]
 
-    // Cleanup
-    delete probabilities[predicted];
-    function clean(obj) {
-        for (var propName in obj) {
-            if (obj[propName] === null || obj[propName] === undefined || obj[propName] == 0) {
-                delete obj[propName];
+    // Clean and sort
+    function GetSortOrder(prop) {
+        return function (a, b) {
+            if (a[prop] > b[prop]) {
+                return -1;
+            } else if (a[prop] < b[prop]) {
+                return 1;
             }
+            return 0;
         }
-        return obj;
     }
-    var probabilities_clean = clean(probabilities)
+    all_letters.sort(GetSortOrder("probability"));
+    delete all_letters[0]
+    all_letters = all_letters.filter((el) => {
+        return parseFloat(el.probability.toFixed(2)) !== 0;
+    })
+    console.log(all_letters)
+
+    extra_info = ""
+    if (all_letters.length === 0) {
+        extra_info += "<b>Confidence</b>: 100%<br>"
+    }
+    else {
+        extra_info += "<b>Confidence</b>: " + Math.round((confidence * 100)).toString() + "%<br>"
+        extra_info += "<b>Other possibilities</b>:<br>"
+        for (var i = 0; i < all_letters.length; i++) {
+            var letter = all_letters[i]["letter"];
+            var probability = all_letters[i]["probability"];
+            extra_info += letter + ": " + Math.round((probability * 100)).toString() + "%<br>";
+        }
+    }
 
     Swal.fire({
         title: "I think your letter is " + predicted + ".",
         confirmButtonColor: '#ff3b3f',
         confirmButtonText: 'Try again!',
-        showCancelButton: true,
-        cancelButtonColor: '#a9a9a9',
-        cancelButtonText: 'Show details',
+        showDenyButton: true,
+        denyButtonColor: '#a9a9a9',
+        denyButtonText: 'Show details',
         background: '#efefef'
     }).then((result) => {
         if (result.isConfirmed) {
             window.location.reload()
-        }
-        else {
+        } else if (result.isDenied) {
             Swal.fire({
-                text: "Other possibilities:\n" + JSON.stringify(probabilities_clean),
-                confirmButtonColor: '#ff3b3f'
+                html: extra_info,
+                confirmButtonColor: '#ff3b3f',
+                confirmButtonText: 'Try again!'
             }).then((result) => {
-                window.location.reload()
+                if (result.isConfirmed) {
+                    window.location.reload()
+                }
             })
         }
     })
