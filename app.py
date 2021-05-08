@@ -3,7 +3,7 @@ import io
 import string
 from typing import Dict, Tuple, Union
 
-from flask import Flask, json, jsonify, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import numpy as np
 from PIL import Image, ImageOps
