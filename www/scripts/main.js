@@ -10,6 +10,9 @@ window.onload = function () {
 // Image sending
 const sendImage = async () => {
     // Sending
+    var icon = document.getElementById("loading-icon");
+    icon.classList.add("fa", "fa-spinner", "fa-spin");
+
     var canvas = document.getElementById("sheet");
     var image_b64 = canvas.toDataURL().replace("data:image/png;base64,", "");
     // var url = 'http://127.0.0.1:5000/'

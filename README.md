@@ -20,7 +20,7 @@ To run the website locally, open the file ```index.html``` in your browser.
 
 You can also call the API directly at https://letterrecognitionapi.azurewebsites.net/.
 
-The API accepts a JSON file in the format ```{"image": [base64-encoded image]}```.
+The API accepts a JSON file in the format ```{"image": <base64-encoded image>}```.
 
 It returns a JSON in the format:
 ```

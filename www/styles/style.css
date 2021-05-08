@@ -1,3 +1,5 @@
+/* Entire document */
+
 body{
     background-color: #efefef;
     font-family: 'Roboto', sans-serif;
@@ -7,6 +9,8 @@ body{
 .container{
     text-align:center;
 }
+
+/* Title and description */
 
 .title-text{
     font-size: 56px;
@@ -19,6 +23,8 @@ body{
     font-weight: 200;
     margin: 0px;
 }
+
+/* Canvas and buttons */
 
 .center {
     margin: 0;
@@ -35,12 +41,12 @@ body{
     margin-bottom: 5px;
 }
 
-#buttons{
-    margin: 5px auto;
-}
-
 .canvas-container{
     margin: 0 auto;
+}
+
+.button-container{
+    margin: 5px auto;
 }
 
 a.button{
