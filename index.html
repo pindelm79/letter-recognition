@@ -7,6 +7,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="www/styles/style.css">
     <script src='https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.4.0/fabric.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
@@ -20,8 +21,8 @@
         <div class="center">
             <p class="draw-text">Draw your letter here:</p>
             <canvas id="sheet" width="504" height="504"></canvas>
-            <div id="buttons">
-                <a href="#" class="button" onclick="sendImage()">Recognize</a>
+            <div class="button-container">
+                <a href="#" id="send-button" class="button" onclick="sendImage()"><i id="loading-icon"></i>Recognize</a>
                 <a href="#" class="button" onclick="window.location.reload()">Reset</a>
             </div>
         </div>
