@@ -23,12 +23,12 @@ You can also call the API directly at https://letterrecognitionapi.azurewebsites
 The API accepts a JSON file in the format ```{"image": [base64-encoded image]}```.
 
 It returns a JSON in the format:
-```json
+```
 {
-    "predicted": *predicted letter*, 
-    "confidence": *confidence for the letter*,
+    "predicted": <predicted letter>, 
+    "confidence": <confidence for the letter>,
     "all": [
-        { "letter": *letter*, "probability": *probability for the letter* },
+        { "letter": <letter>, "probability": <probability for the letter> },
         ...
     ]
 }
