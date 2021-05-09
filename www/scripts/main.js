@@ -9,14 +9,15 @@ window.onload = function () {
 
 // Image sending
 const sendImage = async () => {
-    // Sending
+    // Connection indicator start
     var icon = document.getElementById("loading-icon");
     icon.classList.add("fa", "fa-spinner", "fa-spin");
 
+    // Response sending and handling
     var canvas = document.getElementById("sheet");
     var image_b64 = canvas.toDataURL().replace("data:image/png;base64,", "");
-    // var url = 'http://127.0.0.1:5000/'
-    var url = 'https://letterrecognitionapi.azurewebsites.net/'
+    var url = 'http://127.0.0.1:5000/'
+    // var url = 'https://letterrecognitionapi.azurewebsites.net/'
     const response = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({ "image": image_b64 }),
@@ -25,13 +26,11 @@ const sendImage = async () => {
         }
     });
     const json_response = await response.json();
-
-    // Response
     var predicted = json_response["predicted"]
     var confidence = json_response["confidence"]
     var all_letters = json_response["all"]
 
-    // Clean and sort
+    // Cleaning "all"
     function GetSortOrder(prop) {
         return function (a, b) {
             if (a[prop] > b[prop]) {
@@ -61,6 +60,9 @@ const sendImage = async () => {
             extra_info += letter + ": " + Math.round((probability * 100)).toString() + "%<br>";
         }
     }
+
+    // Connection indicator stop
+    icon.classList.remove("fa", "fa-spinner", "fa-spin");
 
     Swal.fire({
         title: "I think your letter is " + predicted + ".",
