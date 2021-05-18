@@ -140,5 +140,5 @@ cython_debug/
 # vs code
 .vscode/
 
-data/raw/
+data/raw/EMNIST/
 test_image.png
