@@ -1,17 +1,17 @@
 // Canvas
 window.onload = function () {
-    var canvas = new fabric.Canvas('sheet');
+    var canvas = new fabric.Canvas('sheet')
     document.getElementById("sheet").canvas = canvas
-    canvas.isDrawingMode = true;
-    canvas.setBackgroundColor('#a9a9a9', canvas.renderAll.bind(canvas));
-    canvas.freeDrawingBrush.width = 20;
-    canvas.freeDrawingBrush.color = "#ffffff";
+    canvas.isDrawingMode = true
+    canvas.setBackgroundColor('#a9a9a9', canvas.renderAll.bind(canvas))
+    canvas.freeDrawingBrush.width = Math.floor(canvas.width * 0.08)
+    canvas.freeDrawingBrush.color = "#ffffff"
 }
 
 function clearCanvas() {
     var canvas = document.getElementById("sheet").canvas
     canvas.clear()
-    canvas.setBackgroundColor('#a9a9a9', canvas.renderAll.bind(canvas));
+    canvas.setBackgroundColor('#a9a9a9', canvas.renderAll.bind(canvas))
 }
 
 // Image sending
@@ -90,14 +90,14 @@ const sendImage = async () => {
     icon.classList.remove("fa", "fa-spinner", "fa-spin");
 
     Swal.fire({
-        // title: main_info,
         html: main_info,
         confirmButtonColor: '#ff3b3f',
         confirmButtonText: 'Try again!',
         showDenyButton: true,
         denyButtonColor: '#a9a9a9',
         denyButtonText: 'Extra info',
-        background: '#efefef'
+        background: '#efefef',
+        heightAuto: false
     }).then((result) => {
         if (result.isConfirmed) {
             clearCanvas()
@@ -105,7 +105,9 @@ const sendImage = async () => {
             Swal.fire({
                 html: extra_info,
                 confirmButtonColor: '#ff3b3f',
-                confirmButtonText: 'Try again!'
+                confirmButtonText: 'Try again!',
+                background: '#efefef',
+                heightAuto: false
             }).then((result) => {
                 if (result.isConfirmed) {
                     clearCanvas()

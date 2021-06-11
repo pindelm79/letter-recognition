@@ -3,6 +3,7 @@
 
 <head>
     <title>Letter recognition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
@@ -15,23 +16,27 @@
 </head>
 
 <body>
-    <div class="container">
-        <h1 class="title-text">LETTER RECOGNITION</h1>
-        <p class="description-text">A CNN built from scratch with NumPy.</p>
-        <div class="center">
+    <div class="box">
+        <div class="row header">
+            <p class="title-text">LETTER RECOGNITION</p>
+            <p class="description-text">A CNN built from scratch with NumPy.</p>
+        </div>
+        <div class="row content">
             <p class="draw-text">Draw your letter here:</p>
-            <canvas id="sheet" width="504" height="504"></canvas>
+            <div class="canvas-contatiner">
+                <canvas id="sheet" width="504px" height="504px"></canvas>
+            </div>
             <div class="button-container">
-                <a href="#" id="send-button" class="button" onclick="sendImage()"><i id="loading-icon"></i>Recognize</a>
+                <a href="#" class="button" onclick="sendImage()"><i id="loading-icon"></i>Recognize</a>
                 <a href="#" class="button" onclick="clearCanvas()">Clear</a>
             </div>
         </div>
+        <footer class="row footer">
+            <p>Created by Michał Pindel. See the source code on <a
+                    href="https://github.com/pindelm79/letter-recognition">GitHub</a>.</p>
+        </footer>
     </div>
-    <footer>
-        <p>Created by Michał Pindel. See the source code on <a
-                href="https://github.com/pindelm79/letter-recognition">GitHub</a>.</p>
-    </footer>
-</body>
+
 </body>
 
 </html>
