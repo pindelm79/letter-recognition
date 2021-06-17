@@ -28,6 +28,7 @@ body {
 .box .row.footer {
     flex: 0 0 auto;
     background-color: #caebf2;
+    font-size: 2vh;
     font-weight: 300;
     margin-top: auto;
 }
@@ -35,38 +36,37 @@ body {
 /* Styling */
 
 .title-text{
-    font-size: 40px;
+    font-size: 5vh;
     font-weight: bold;
     margin: 0.5vh;
 }
 
 .description-text{
-    font-size: 30px;
+    font-size: 3vh;
     font-weight: 200;
     margin: 0.5vh;
 }
 
 .draw-text{
-    font-size: 30px;
+    font-size: 3.2vh;
     font-weight: 300;
     margin: 5vh auto 1vh;
 }
 
 .canvas-container{
     margin: 0 auto;
-    width: 100%;
 }
 
 a.button{
-    display:inline-block;
-    padding:0.3em 1.2em;
+    display: inline-block;
+    padding: 0.3em 1.2em;
     margin: 0.5em 0.3em 0.3em 0;
     box-sizing: border-box;
-    text-decoration:none;
-    font-size: 20px;
-    font-weight:400;
-    color:#efefef;
-    background-color:#ff3b3f;
+    text-decoration: none;
+    font-size: 2.2vh;
+    font-weight: 400;
+    color: #efefef;
+    background-color: #ff3b3f;
     transition: all 0.2s;
 }
 
@@ -74,9 +74,9 @@ a.button:hover{
     background-color:#cc2f32;
 }
 
-@media all and (max-width:30em){
+@media all and (max-width: 30em){
     a.button{
-        display:block;
-        margin:0.2em auto;
+        display: block;
+        margin: 0.2em auto;
     }
 }
