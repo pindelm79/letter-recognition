@@ -54,19 +54,18 @@ body {
 
 .canvas-container{
     margin: 0 auto;
-    width: 100%;
 }
 
 a.button{
-    display:inline-block;
-    padding:0.3em 1.2em;
+    display: inline-block;
+    padding: 0.3em 1.2em;
     margin: 0.5em 0.3em 0.3em 0;
     box-sizing: border-box;
-    text-decoration:none;
+    text-decoration: none;
     font-size: 20px;
-    font-weight:400;
-    color:#efefef;
-    background-color:#ff3b3f;
+    font-weight: 400;
+    color: #efefef;
+    background-color: #ff3b3f;
     transition: all 0.2s;
 }
 
@@ -74,9 +73,9 @@ a.button:hover{
     background-color:#cc2f32;
 }
 
-@media all and (max-width:30em){
+@media all and (max-width: 30em){
     a.button{
-        display:block;
-        margin:0.2em auto;
+        display: block;
+        margin: 0.2em auto;
     }
 }

@@ -1,5 +1,13 @@
 // Canvas
 window.onload = function () {
+    // Size the canvas
+    var sheet = document.getElementById('sheet')
+    var targetSize = Math.floor(window.innerHeight / 2)
+    sheet.width = targetSize
+    sheet.style.width = targetSize
+    sheet.height = targetSize
+    sheet.style.height = targetSize
+
     var canvas = new fabric.Canvas('sheet')
     document.getElementById("sheet").canvas = canvas
     canvas.isDrawingMode = true
