@@ -74,9 +74,7 @@ def transform_image(image_b64: Union[str, bytes]) -> np.ndarray:
         image_pil = image_pil.resize((28, 28))
     image_pil = ImageOps.grayscale(image_pil)
     image = np.asarray(image_pil)
-    threshold = ((np.max(image) + np.mean(image)) / 2) * (
-        1 - 0.2 * (1 - np.std(image) / 128)
-    )
+    threshold = ((np.max(image) + np.mean(image)) / 2) * (1 - 0.2 * (1 - np.std(image) / 128))
     image_binarized = np.where(image > threshold, 1.0, 0.0)
 
     return image_binarized.reshape(1, 1, 28, 28)
@@ -114,9 +112,7 @@ def get_prediction(image_b64: Union[str, bytes]) -> Tuple[str, np.ndarray]:
 
     # Map output (probabilities) to letters
     letters = string.ascii_uppercase
-    probabilities = {
-        letters[i]: softmax.forward(out_linear3)[0, i] for i in range(len(letters))
-    }
+    probabilities = {letters[i]: softmax.forward(out_linear3)[0, i] for i in range(len(letters))}
     return (max(probabilities, key=probabilities.get), probabilities)
 
 

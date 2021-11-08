@@ -35,29 +35,29 @@ body {
 
 /* Styling */
 
-.title-text{
+.title-text {
     font-size: 5vh;
     font-weight: bold;
     margin: 0.5vh;
 }
 
-.description-text{
+.description-text {
     font-size: 3vh;
     font-weight: 200;
     margin: 0.5vh;
 }
 
-.draw-text{
+.draw-text {
     font-size: 3.2vh;
     font-weight: 300;
     margin: 5vh auto 1vh;
 }
 
-.canvas-container{
+.canvas-container {
     margin: 0 auto;
 }
 
-a.button{
+a.button {
     display: inline-block;
     padding: 0.3em 1.2em;
     margin: 0.5em 0.3em 0.3em 0;
@@ -70,12 +70,12 @@ a.button{
     transition: all 0.2s;
 }
 
-a.button:hover{
-    background-color:#cc2f32;
+a.button:hover {
+    background-color: #cc2f32;
 }
 
-@media all and (max-width: 30em){
-    a.button{
+@media all and (max-width: 30em) {
+    a.button {
         display: block;
         margin: 0.2em auto;
     }

@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     # Choose random image
     i = RNG.integers(0, len(images))
-    x = images[i : i + 1]
+    x = images[i: i + 1]
 
     # Go through the model
     out_conv1 = conv1.forward(x)

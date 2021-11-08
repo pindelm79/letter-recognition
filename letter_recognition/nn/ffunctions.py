@@ -5,6 +5,8 @@ from numba import njit
 import numpy as np
 
 # ---Conv2d helper functions---
+
+
 @njit
 def calculate_input_gradient(
     dout: np.ndarray, in_array: np.ndarray, weight: np.ndarray

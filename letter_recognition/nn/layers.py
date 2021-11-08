@@ -168,7 +168,7 @@ class Conv2d(_Layer):
         # Remove padding from output
         new_H = dx.shape[2] - self.padding[0]
         new_W = dx.shape[3] - self.padding[1]
-        dx = dx[:, :, self.padding[0] : new_H, self.padding[1] : new_W]
+        dx = dx[:, :, self.padding[0]: new_H, self.padding[1]: new_W]
 
         dW = fast.calculate_weight_gradient(dout, in_array, self.weight)
 
