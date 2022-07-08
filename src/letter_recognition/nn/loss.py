@@ -11,7 +11,7 @@ class _Loss(ABC):  # pragma: no cover
 
     @abstractmethod
     def calculate(self, predicted: np.ndarray, target: np.ndarray) -> np.ndarray:
-        """Abstact method for calculating the loss."""
+        """Abstract method for calculating the loss."""
         pass
 
     def backward(self, predicted: np.ndarray) -> np.ndarray:
@@ -80,17 +80,12 @@ class MAE(_Loss):
             If 'mean', it is 1/N.
         """
         gradient = np.zeros_like(predicted)
-
-        grad_factor = 1.0
-        if self.reduction == "mean":
-            grad_factor = 1 / gradient.shape[0]  # 1 / N
-
-        for i in range(predicted.shape[0]):  # N
+        grad_factor = 1 / gradient.shape[0] if self.reduction == "mean" else 1.0
+        for i in range(predicted.shape[0]):
             if predicted[i] > target[i]:
                 gradient[i] = grad_factor
             elif predicted[i] < target[i]:
                 gradient[i] = -grad_factor
-
         return gradient
 
 

@@ -2,11 +2,11 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
-import nox
+import nox  # pyright: ignore[reportMissingImports]
 
 try:
-    from nox_poetry import Session
-    from nox_poetry import session
+    from nox_poetry import Session  # pyright: ignore[reportMissingImports]
+    from nox_poetry import session  # pyright: ignore[reportMissingImports]
 except ImportError:
     message = f"""\
     Nox failed to import the 'nox-poetry' package.

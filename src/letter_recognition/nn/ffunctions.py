@@ -1,13 +1,13 @@
 """This module contains fast helper functions for the nn package, usually wrapped with numba."""
+
 from typing import Tuple, Union
 
-from numba import njit
+import numba
 import numpy as np
 
 # ---Conv2d helper functions---
 
-
-@njit
+@numba.njit
 def calculate_input_gradient(
     dout: np.ndarray, in_array: np.ndarray, weight: np.ndarray
 ) -> np.ndarray:
@@ -44,7 +44,7 @@ def calculate_input_gradient(
     return dx
 
 
-@njit
+@numba.njit
 def calculate_weight_gradient(
     dout: np.ndarray, in_array: np.ndarray, weight: np.ndarray
 ) -> np.ndarray:
@@ -82,7 +82,7 @@ def calculate_weight_gradient(
 
 
 # ---MaxPool2d helper functions---
-@njit
+@numba.njit
 def maxpool2d_forward(
     in_array: np.ndarray,
     out: np.ndarray,
@@ -91,7 +91,7 @@ def maxpool2d_forward(
     padding: Tuple[int, int],
     ceil_mode: bool,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Does maxpooling over an input.
+    """Does maxpool over an input.
 
     Parameters
     ----------
@@ -186,12 +186,12 @@ def maxpool2d_forward(
     return out, max_indices
 
 
-@njit
+@numba.njit
 def maxpool2d_backward(
     dout: np.ndarray,
     in_array: np.ndarray,
     max_indices: Union[np.ndarray, None],
-) -> np.ndarray:
+) -> np.ndarray:  # sourcery skip: use-itertools-product
     """Return the gradient of the output w.r.t. the maxpool input.
 
     Parameters

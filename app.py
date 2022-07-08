@@ -143,9 +143,11 @@ def generate_response(predicted: str, probabilities: Dict) -> str:
         }
     }
     """
-    all_letters = []
-    for letter in probabilities:
-        all_letters.append({"letter": letter, "probability": probabilities[letter]})
+    all_letters = [
+        {"letter": letter, "probability": probabilities[letter]}
+        for letter in probabilities
+    ]
+
     response_dict = {
         "predicted": predicted,
         "confidence": probabilities[predicted],

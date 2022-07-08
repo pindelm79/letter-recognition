@@ -43,7 +43,7 @@ class Conv2d(_Layer):
         Zero-padding added to all sides of the input. If a single int - it is the value for height
         and width. If a tuple of 2 ints - first is used for height, second for width. By default 0.
     bias : bool, optional
-        If True, adds a leanable bias to the output. By default True.
+        If True, adds a learnable bias to the output. By default True.
 
     Attributes
     ----------
@@ -125,11 +125,11 @@ class Conv2d(_Layer):
 
         for n in range(output.shape[0]):  # N
             for f in range(output.shape[1]):  # output channels
-                cross_correlation_sum = 0
-                for c in range(self.in_channels):  # input channels
-                    cross_correlation_sum += signal.correlate2d(
-                        in_array[n, c], self.weight[f, c], mode="valid"
-                    )
+                cross_correlation_sum = sum(
+                    signal.correlate2d(in_array[n, c], self.weight[f, c], mode="valid")
+                    for c in range(self.in_channels)  # input channels
+                )
+
                 output[n, f] = self.bias[f] + cross_correlation_sum
 
         return output
@@ -351,7 +351,7 @@ class MaxPool2d(_Layer):
     def forward(
         self, in_array: np.ndarray
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        """Does maxpooling over the specified input.
+        """Does maxpool over the specified input.
 
         Parameters
         ----------
@@ -361,7 +361,7 @@ class MaxPool2d(_Layer):
         Returns
         -------
         ndarray or tuple of 2 ndarrays
-            Returns the output of maxpooling. Shape: (N, C, H_out, W_out).
+            Returns the output of maxpool. Shape: (N, C, H_out, W_out).
             If return_indices=True, also returns an array of (flat) indices of max values.
         """
         out = np.empty(self._calculate_output_shape(in_array.shape))
