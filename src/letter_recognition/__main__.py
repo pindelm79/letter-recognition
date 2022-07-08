@@ -11,7 +11,8 @@ from letter_recognition import RNG
 
 @click.command()
 @click.version_option()
-def main():
+@click.option("--show-image/--hide-image", default=False)
+def main(show_image):
     click.echo("Initializing model...")
     conv1_out_channels = 6
     conv1_kernel_size = (5, 5)
@@ -73,6 +74,7 @@ def main():
     click.echo(f"Predicted letter: {max(probabilities, key=probabilities.get)}")
     click.echo(probabilities)
 
-    _, ax = plt.subplots()
-    ax.imshow(x[0, 0], cmap="gray")
-    plt.show()
+    if show_image:
+        _, ax = plt.subplots()
+        ax.imshow(x[0, 0], cmap="gray")
+        plt.show()
