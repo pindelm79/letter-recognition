@@ -24,7 +24,7 @@ nox.options.sessions = ("tests",)
 @session(python=python_versions)
 def tests(session):
     session.install(".")
-    session.install("coverage[toml]", "pytest", "pygments")
+    session.install("coverage[toml]", "pytest", "pygments", "torch")
     try:
         session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
     finally:

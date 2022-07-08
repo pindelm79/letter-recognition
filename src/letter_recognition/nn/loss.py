@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 
 
-class _Loss(ABC):
+class _Loss(ABC):  # pragma: no cover
     """Abstract class for defining loss functions."""
 
     @abstractmethod

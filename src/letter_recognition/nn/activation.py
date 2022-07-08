@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class _Activation(ABC):
+class _Activation(ABC):  # pragma: no cover
     """An abstract class for defining activation functions of a model."""
 
     @abstractmethod
@@ -82,5 +82,5 @@ class Softmax(_Activation):
 
         return out
 
-    def backward(self, dout: np.ndarray, in_array: np.ndarray):
+    def backward(self, dout: np.ndarray, in_array: np.ndarray):  # pragma: no cover
         raise NotImplementedError()

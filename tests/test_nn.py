@@ -16,8 +16,8 @@ import letter_recognition.nn.loss as loss_custom
 @pytest.mark.parametrize("in_H, in_W", [(28, 28), (21, 5)])
 @pytest.mark.parametrize("kernel_size", [3, (1, 4)])
 @pytest.mark.parametrize("padding", [0, 2, (2, 1)])
+@pytest.mark.parametrize("bias", [False, True])
 class TestConv2d:
-    @pytest.mark.parametrize("bias", [False, True])
     def test_forward(
         self,
         batch_size,
@@ -43,7 +43,6 @@ class TestConv2d:
             in_tensor, weight_tensor, bias=bias_tensor, padding=padding
         )
 
-        assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
 
     def test_backward(
@@ -55,11 +54,12 @@ class TestConv2d:
         out_channels,
         kernel_size,
         padding,
+        bias,
     ):
         in_shape = (batch_size, in_channels, in_H, in_W)
         in_array = RNG.integers(-127, 128, in_shape).astype("float")
         conv2d_custom = nn_custom.Conv2d(
-            in_channels, out_channels, kernel_size, padding=padding, bias=True
+            in_channels, out_channels, kernel_size, padding=padding, bias=bias
         )
 
         in_tensor = torch.from_numpy(in_array).float()
@@ -84,9 +84,6 @@ class TestConv2d:
             bias_gradient_custom,
         ) = conv2d_custom.backward(out_torch.grad.numpy(), in_array)
 
-        assert input_gradient_custom.shape == input_gradient_torch.size()
-        assert weight_gradient_custom.shape == weight_gradient_torch.size()
-        assert bias_gradient_custom.shape == bias_gradient_torch.size()
         assert np.allclose(input_gradient_custom, input_gradient_torch, atol=1e-4)
         assert np.allclose(weight_gradient_custom, weight_gradient_torch, atol=1e-4)
         assert np.allclose(bias_gradient_custom, bias_gradient_torch, atol=1e-4)
@@ -108,7 +105,6 @@ class TestLinear:
         bias_tensor = torch.from_numpy(linear_custom.bias).float()
         out_torch = F.linear(in_tensor, weight_tensor, bias_tensor)
 
-        assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
 
     def test_backward(self, batch_size, in_features, out_features):
@@ -136,9 +132,6 @@ class TestLinear:
             bias_gradient_custom,
         ) = linear_custom.backward(out_torch.grad.numpy(), in_array)
 
-        assert input_gradient_custom.shape == input_gradient_torch.size()
-        assert weight_gradient_custom.shape == weight_gradient_torch.size()
-        assert bias_gradient_custom.shape == bias_gradient_torch.size()
         assert np.allclose(input_gradient_custom, input_gradient_torch, atol=1e-4)
         assert np.allclose(weight_gradient_custom, weight_gradient_torch, atol=1e-4)
         assert np.allclose(bias_gradient_custom, bias_gradient_torch, atol=1e-4)
@@ -166,8 +159,6 @@ class TestMaxPool2d:
             in_tensor, kernel_size, padding=padding, ceil_mode=ceil_mode
         )
 
-        assert out_custom.shape == out_torch.size()
-        assert idx_custom.shape == idx_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
         assert np.allclose(idx_custom, idx_torch, atol=1e-4)
 
@@ -195,7 +186,6 @@ class TestMaxPool2d:
             out_torch.grad.numpy(), in_array, idx_custom
         )
 
-        assert input_gradient_custom.shape == input_gradient_torch.size()
         assert np.allclose(input_gradient_custom, input_gradient_torch, atol=1e-4)
 
 
@@ -209,7 +199,6 @@ class TestReLU:
         in_tensor = torch.from_numpy(in_array).float()
         out_torch = F.relu(in_tensor)
 
-        assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
 
     def test_backward(self, in_shape):
@@ -226,7 +215,6 @@ class TestReLU:
 
         input_gradient_custom = relu_custom.backward(out_torch.grad.numpy(), in_array)
 
-        assert input_gradient_custom.shape == input_gradient_torch.size()
         assert np.allclose(input_gradient_custom, input_gradient_torch, atol=1e-4)
 
 
@@ -254,7 +242,6 @@ class TestCrossEntropy:
         ce_torch = torch.nn.CrossEntropyLoss(weight=weight_torch, reduction=reduction)
         out_torch = ce_torch(predicted_tensor, class_tensor)
 
-        assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)
 
     def test_backward(self, batch_size, class_count, use_weight, reduction, max_value):
@@ -278,7 +265,6 @@ class TestCrossEntropy:
         out_torch.sum().backward()
         grad_torch = predicted_tensor.grad
 
-        assert grad_custom.shape == grad_torch.size()
         assert np.allclose(grad_custom, grad_torch, atol=1e-4)
 
 
@@ -314,7 +300,6 @@ class TestMAE:
         out_torch.sum().backward()
         grad_torch = predicted_tensor.grad
 
-        assert grad_custom.shape == grad_torch.size()
         assert np.allclose(grad_custom, grad_torch, atol=1e-4)
 
 
@@ -329,7 +314,6 @@ class TestSoftmax:
         out_custom = softmax_custom.forward(in_array)
 
         in_tensor = torch.from_numpy(in_array).float()
-        out_torch = F.softmax(in_tensor)
+        out_torch = F.softmax(in_tensor, dim=1)
 
-        assert out_custom.shape == out_torch.size()
         assert np.allclose(out_custom, out_torch, atol=1e-4)

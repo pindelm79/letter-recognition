@@ -11,7 +11,7 @@ from letter_recognition import RNG
 import letter_recognition.nn.ffunctions as fast
 
 
-class _Layer(ABC):
+class _Layer(ABC):  # pragma: no cover
     """An abstract class for defining layers/operations of a model."""
 
     @abstractmethod
@@ -75,15 +75,11 @@ class Conv2d(_Layer):
         else:
             self.kernel_size = kernel_size
 
-        if stride != 1 and stride != (1, 1):
+        if stride not in [1, (1, 1)]:
             raise RuntimeError("Strides different than 1 are currently not supported.")
         self.stride = (1, 1)
 
-        if isinstance(padding, int):
-            self.padding = (padding, padding)
-        else:
-            self.padding = padding
-
+        self.padding = (padding, padding) if isinstance(padding, int) else padding
         self._use_bias = bias
 
         k = 1 / (self.in_channels * self.kernel_size[0] * self.kernel_size[1])
@@ -172,11 +168,7 @@ class Conv2d(_Layer):
 
         dW = fast.calculate_weight_gradient(dout, in_array, self.weight)
 
-        # Only calculate db if using bias, otherwise just zeros.
-        if self._use_bias:
-            db = np.sum(dout, axis=(0, 2, 3))
-        else:
-            db = np.zeros(self.out_channels)
+        db = np.sum(dout, axis=(0, 2, 3))
 
         return dx, dW, db
 
@@ -338,10 +330,7 @@ class MaxPool2d(_Layer):
             )
         self.stride = self.kernel_size
 
-        if isinstance(padding, int):
-            self.padding = (padding, padding)
-        else:
-            self.padding = padding
+        self.padding = (padding, padding) if isinstance(padding, int) else padding
         if (self.padding[0] > (self.kernel_size[0] / 2)) or (
             self.padding[1] > (self.kernel_size[1] / 2)
         ):
@@ -350,10 +339,7 @@ class MaxPool2d(_Layer):
                 "Padding must be equal to or smaller than half of kernel size."
             )
 
-        if isinstance(dilation, int):
-            self.dilation = (dilation, dilation)
-        else:
-            self.dilation = dilation
+        self.dilation = (dilation, dilation) if isinstance(dilation, int) else dilation
         if self.dilation != (1, 1):
             raise RuntimeError(
                 "Dilations different than 1 are currently not supported."
